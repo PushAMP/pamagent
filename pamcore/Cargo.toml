@@ -1,0 +1,25 @@
+[package]
+
+name = "pamagent_core"
+version = "0.0.1"
+authors = ["PushAMP LLC <devcore@pushamp.com>"]
+
+[lib]
+name = "pamagent_core"
+crate-type = ["cdylib"]
+
+[dependencies]
+libc = "0.2"
+hyper = "*"
+hyper-native-tls = "0.2.2"
+native-tls = "0.1"
+lazy_static = "0.2"
+
+[dependencies.cpython]
+version = "*"
+
+[features]
+python27-sys = ["cpython/python27-sys"]
+python3-sys = ["cpython/python3-sys"]
+
+
