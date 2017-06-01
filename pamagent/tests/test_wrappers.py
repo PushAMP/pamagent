@@ -7,9 +7,8 @@ from pamagent.transaction import Transaction
 def test_request_wrap():
     instrument_requests_sessions("requests")
     import requests
-    print(dir(requests.Session.send))
     tr = Transaction(enabled=True)
     with tr:
         s = requests.session()
         s.get("http://ya.ru")
-    print(tr)
+    # print(tr)

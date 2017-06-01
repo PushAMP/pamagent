@@ -38,3 +38,10 @@ def drop_transaction(transaction):
     res = pamagent_core.drop_transaction(id=transaction.thread_id)
     if not res:
         raise RuntimeError('No active transaction')
+
+
+def get_start_time(transaction):
+    return pamagent_core.get_transaction_start_time(id=transaction.thread_id)
+
+def get_end_time(transaction):
+    return pamagent_core.get_transaction_end_time(id=transaction.thread_id)
