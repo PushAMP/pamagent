@@ -126,9 +126,9 @@ fn set_transaction(_: Python,
 }
 
 fn set_transaction_path(_: Python, id: u64, path: String) -> PyResult<bool> {
-    let tr_cache = TRANSACTION_CACHE.lock().unwrap();
-    match tr_cache.get(&id) {
-        Some(ref mut tr) => tr.set_path(path),
+    let mut tr_cache = TRANSACTION_CACHE.lock().unwrap();
+    match tr_cache.get_mut(&id) {
+        Some(tr) => tr.set_path(path),
         None => return Ok(false),
     };
     Ok(true)
