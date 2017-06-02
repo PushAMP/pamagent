@@ -13,7 +13,7 @@ extern crate rand;
 use cpython::{PyResult, Python};
 
 mod core;
-
+use core::TransactionCache;
 py_module_initializer!(pamagent_core,
                        initpamagent_core,
                        PyInit_pamagent_core,
@@ -53,35 +53,59 @@ fn set_transaction_py(_: Python,
                       transaction: String,
                       path: Option<String>)
                       -> PyResult<bool> {
-    Ok(core::set_transaction(id, transaction, path))
+    Ok(core::TRANSACTION_CACHE
+           .write()
+           .unwrap()
+           .set_transaction(id, transaction, path))
 }
 
 
 fn get_transaction_py(_: Python, id: u64) -> PyResult<Option<u64>> {
-    Ok(core::get_transaction(id))
+    Ok(core::TRANSACTION_CACHE
+           .read()
+           .unwrap()
+           .availability_transaction(id))
 }
 
 fn get_transaction_start_time_py(_: Python, id: u64) -> PyResult<f64> {
-    Ok(core::get_transaction_start_time(id))
+    Ok(core::TRANSACTION_CACHE
+           .read()
+           .unwrap()
+           .get_transaction_start_time(id))
 }
 
 fn get_transaction_end_time_py(_: Python, id: u64) -> PyResult<f64> {
-    Ok(core::get_transaction_end_time(id))
+    Ok(core::TRANSACTION_CACHE
+           .read()
+           .unwrap()
+           .get_transaction_end_time(id))
 }
 
 fn push_current_py(_: Python, id: u64, node_id: u64, start_time: f64) -> PyResult<bool> {
-    Ok(core::push_current(id, node_id, start_time))
+    Ok(core::TRANSACTION_CACHE
+           .write()
+           .unwrap()
+           .push_current(id, node_id, start_time))
 }
 
 fn pop_current_py(_: Python, id: u64, node_id: u64, end_time: f64) -> PyResult<Option<u64>> {
-    Ok(core::pop_current(id, node_id, end_time))
+    Ok(core::TRANSACTION_CACHE
+           .write()
+           .unwrap()
+           .pop_current(id, node_id, end_time))
 }
 
 fn drop_transaction_py(_: Python, id: u64) -> PyResult<bool> {
-    Ok(core::drop_transaction(id))
+    Ok(core::TRANSACTION_CACHE
+           .write()
+           .unwrap()
+           .drop_transaction(id))
 }
 
 fn set_transaction_path_py(_: Python, id: u64, path: String) -> PyResult<bool> {
-    Ok(core::set_transaction_path(id, path))
+    Ok(core::TRANSACTION_CACHE
+           .write()
+           .unwrap()
+           .set_transaction_path(id, path))
 }
 
