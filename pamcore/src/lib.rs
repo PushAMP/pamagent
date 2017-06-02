@@ -4,7 +4,6 @@
 extern crate cpython;
 extern crate serde;
 extern crate serde_json;
-
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
@@ -59,8 +58,13 @@ struct TransactionNode {
     nodes_stack: RefCell<Vec<StackNode>>,
     trace_node_count: RefCell<u8>,
     guid: String,
+    path: String,
 }
-
+impl TransactionNode {
+    fn set_path(&mut self, path: String) {
+        self.path = path;
+    }
+}
 lazy_static! {
     static ref TRANSACTION_CACHE: Mutex<HashMap<u64, TransactionNode>> = {
         let m = Mutex::new(HashMap::new());
@@ -75,7 +79,8 @@ py_module_initializer!(pamagent_core,
     m.add(py, "__doc__", "This module is implemented in Rust.")?;
     m.add(py,
           "set_transaction",
-          py_fn!(py, set_transaction(id: u64, transaction: String)))?;
+          py_fn!(py,
+                 set_transaction(id: u64, transaction: String, path: Option<String>)))?;
     m.add(py, "get_transaction", py_fn!(py, get_transaction(id: u64)))?;
     m.add(py,
           "drop_transaction",
@@ -92,17 +97,19 @@ py_module_initializer!(pamagent_core,
     m.add(py,
           "get_transaction_end_time",
           py_fn!(py, get_transaction_end_time(id: u64)))?;
+    m.add(py,
+          "set_transaction_path",
+          py_fn!(py, set_transaction_path(id: u64, path: String)))?;
+
     Ok(())
 });
 
-fn set_transaction(_: Python, id: u64, transaction: String) -> PyResult<bool> {
-    let mut tr_cache = match TRANSACTION_CACHE.lock() {
-        Ok(v) => v,
-        Err(e) => {
-            println!("ERROR {:?}", e);
-            panic!("DD");
-        }
-    };
+fn set_transaction(_: Python,
+                   id: u64,
+                   transaction: String,
+                   path: Option<String>)
+                   -> PyResult<bool> {
+    let mut tr_cache = TRANSACTION_CACHE.lock().unwrap();
     match tr_cache.entry(id) {
         Entry::Occupied(_) => Ok(false),
         Entry::Vacant(v) => {
@@ -111,11 +118,23 @@ fn set_transaction(_: Python, id: u64, transaction: String) -> PyResult<bool> {
                          nodes_stack: RefCell::new(vec![]),
                          trace_node_count: RefCell::new(0),
                          guid: format!("{:x}", rand::random::<u64>()),
+                         path: path.unwrap_or(format!("")),
                      });
             Ok(true)
         }
     }
 }
+
+fn set_transaction_path(_: Python, id: u64, path: String) -> PyResult<bool> {
+    let tr_cache = TRANSACTION_CACHE.lock().unwrap();
+    match tr_cache.get(&id) {
+        Some(ref mut tr) => tr.set_path(path),
+        None => return Ok(false),
+    };
+    Ok(true)
+
+}
+
 
 fn get_transaction(_: Python, id: u64) -> PyResult<Option<u64>> {
     let tr_cache = TRANSACTION_CACHE.lock().unwrap();

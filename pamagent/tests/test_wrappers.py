@@ -8,6 +8,7 @@ def test_request_wrap():
     instrument_requests_sessions("requests")
     import requests
     tr = Transaction(enabled=True)
+    tr.set_transaction_path("/yt")
     with tr:
         s = requests.session()
         s.get("http://ya.ru")

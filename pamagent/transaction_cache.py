@@ -25,7 +25,7 @@ def save_transaction(transaction):
     """
     Saves the specified transaction away under the thread ID of the current executing thread.
     """
-    res = pamagent_core.set_transaction(id=transaction.thread_id, transaction="Trans")
+    res = pamagent_core.set_transaction(id=transaction.thread_id, transaction="Trans", path=transaction._path)
     if not res:
         raise RuntimeError('Transaction already active')
 
@@ -42,6 +42,7 @@ def drop_transaction(transaction):
 
 def get_start_time(transaction):
     return pamagent_core.get_transaction_start_time(id=transaction.thread_id)
+
 
 def get_end_time(transaction):
     return pamagent_core.get_transaction_end_time(id=transaction.thread_id)

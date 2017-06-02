@@ -21,8 +21,7 @@ class Transaction(object):
         self._transaction_id = id(self)
         self._name = None
         self.stopped = False
-        self._path = None
-
+        self._path = ""
         if enabled:
             self.enabled = True
 
@@ -118,6 +117,7 @@ class Transaction(object):
 
     def set_transaction_path(self, path):
         self._path = path
+        pamagent_core.set_transaction_path(self.thread_id, path)
 
     @property
     def path(self):
