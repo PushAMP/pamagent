@@ -4,14 +4,14 @@ use std::collections::HashMap;
 use rand;
 use serde_json;
 
+const DEFAULT_TIME_VAL: f64 = 0.0;
+
 lazy_static! {
-    static ref TRANSACTION_CACHE: RwLock<HashMap<u64, TransactionNode>> = {
-        let m = RwLock::new(HashMap::new());
+    pub static  ref TRANSACTION_CACHE: RwLock<TrMap> = {
+        let m = RwLock::new(TrMap::new());
         m
     };
 }
-
-const DEFAULT_TIME_VAL: f64 = 0.0;
 
 #[derive(Debug, Serialize)]
 struct StackNode {
@@ -67,133 +67,138 @@ impl TransactionNode {
     }
 }
 
-pub fn set_transaction(id: u64, transaction: String, path: Option<String>) -> bool {
-    let mut tr_cache = TRANSACTION_CACHE.write().unwrap();
-    match tr_cache.entry(id) {
-        Entry::Occupied(_) => false,
-        Entry::Vacant(v) => {
-            v.insert(TransactionNode {
-                         base_name: transaction,
-                         nodes_stack: vec![],
-                         trace_node_count: 0,
-                         guid: format!("{:x}", rand::random::<u64>()),
-                         path: path.unwrap_or(format!("")),
-                     });
-            true
+pub struct TrMap(HashMap<u64, TransactionNode>);
+
+pub trait TransactionCache {
+    fn new() -> TrMap;
+    fn get_transaction_start_time(&self, id: u64) -> f64;
+    fn get_transaction_end_time(&self, id: u64) -> f64;
+    fn set_transaction(&mut self, id: u64, transaction: String, path: Option<String>) -> bool;
+    fn availability_transaction(&self, id: u64) -> Option<u64>;
+    fn drop_transaction(&mut self, id: u64) -> bool;
+    fn push_current(&mut self, id: u64, node_id: u64, start_time: f64) -> bool;
+    fn pop_current(&mut self, id: u64, node_id: u64, end_time: f64) -> Option<u64>;
+    fn set_transaction_path(&mut self, id: u64, path: String) -> bool;
+}
+
+impl TransactionCache for TrMap {
+    fn new() -> TrMap {
+        TrMap(HashMap::new())
+    }
+    fn set_transaction(&mut self, id: u64, transaction: String, path: Option<String>) -> bool {
+        match self.0.entry(id) {
+            Entry::Occupied(_) => false,
+            Entry::Vacant(v) => {
+                v.insert(TransactionNode {
+                             base_name: transaction,
+                             nodes_stack: vec![],
+                             trace_node_count: 0,
+                             guid: format!("{:x}", rand::random::<u64>()),
+                             path: path.unwrap_or(format!("")),
+                         });
+                true
+            }
         }
     }
-}
-
-pub fn get_transaction(id: u64) -> Option<u64> {
-    let tr_cache = TRANSACTION_CACHE.read().unwrap();
-    match tr_cache.get(&id) {
-        Some(_) => Some(id),
-        None => None,
-    }
-}
-
-pub fn drop_transaction(id: u64) -> bool {
-    let mut tr_cache = TRANSACTION_CACHE.write().unwrap();
-    match tr_cache.remove(&id) {
-        Some(val) => {
-            let j = serde_json::to_string(&val).unwrap_or("".to_uppercase());
-            println!("{}", j);
-            true
+    fn get_transaction_start_time(&self, id: u64) -> f64 {
+        match self.0.get(&id) {
+            Some(tr) => {
+                if tr.nodes_stack.len() > 0 {
+                    tr.nodes_stack[0].start_time;
+                }
+                DEFAULT_TIME_VAL
+            }
+            None => DEFAULT_TIME_VAL,
         }
-        None => false,
     }
-}
-
-pub fn push_current(id: u64, node_id: u64, start_time: f64) -> bool {
-    let mut tr_cache = TRANSACTION_CACHE.write().unwrap();
-    let c_tr = match tr_cache.get_mut(&id) {
-        Some(v) => v,
-        None => return false,
-    };
-    c_tr.nodes_stack.push(StackNode {
-                              node_id: node_id,
-                              childrens: vec![],
-                              start_time: start_time,
-                              end_time: 0.0,
-                              exclusive: 0.0,
-                              node_count: 0,
-                              duration: 0.0,
-                          });
-    return true;
-}
-
-pub fn pop_current(id: u64, node_id: u64, end_time: f64) -> Option<u64> {
-    let mut tr_cache = TRANSACTION_CACHE.write().unwrap();
-    let c_tr = match tr_cache.get_mut(&id) {
-        Some(v) => v,
-        None => return None,
-    };
-    let ln = c_tr.nodes_stack.len();
-    if ln == 1 {
-        let ref mut root_id = c_tr.nodes_stack[0];
-        root_id.set_endtime(end_time);
-        root_id.comp_exclusive();
-        c_tr.trace_node_count += 1;
-        return None;
-    };
-    let cur_id = match c_tr.nodes_stack.pop() {
-        Some(mut v) => {
-            v.set_endtime(end_time);
-            v.comp_exclusive();
+    fn get_transaction_end_time(&self, id: u64) -> f64 {
+        match self.0.get(&id) {
+            Some(tr) => {
+                if tr.nodes_stack.len() > 0 {
+                    tr.nodes_stack[0].end_time;
+                }
+                DEFAULT_TIME_VAL
+            }
+            None => DEFAULT_TIME_VAL,
+        }
+    }
+    fn availability_transaction(&self, id: u64) -> Option<u64> {
+        match self.0.get(&id) {
+            Some(_) => Some(id),
+            None => None,
+        }
+    }
+    fn drop_transaction(&mut self, id: u64) -> bool {
+        match self.0.remove(&id) {
+            Some(val) => {
+                let j = serde_json::to_string(&val).unwrap_or("".to_uppercase());
+                println!("{}", j);
+                true
+            }
+            None => false,
+        }
+    }
+    fn push_current(&mut self, id: u64, node_id: u64, start_time: f64) -> bool {
+        match self.0.get_mut(&id) {
+            Some(v) => {
+                v.nodes_stack.push(StackNode {
+                                       node_id: node_id,
+                                       childrens: vec![],
+                                       start_time: start_time,
+                                       end_time: 0.0,
+                                       exclusive: 0.0,
+                                       node_count: 0,
+                                       duration: 0.0,
+                                   });
+                true
+            }
+            None => false,
+        }
+    }
+    fn pop_current(&mut self, id: u64, node_id: u64, end_time: f64) -> Option<u64> {
+        let c_tr = match self.0.get_mut(&id) {
+            Some(v) => v,
+            None => return None,
+        };
+        let ln = c_tr.nodes_stack.len();
+        if ln == 1 {
+            let ref mut root_id = c_tr.nodes_stack[0];
+            root_id.set_endtime(end_time);
+            root_id.comp_exclusive();
             c_tr.trace_node_count += 1;
-            v
-        }
-        None => return None,
-    };
-    let ln = c_tr.nodes_stack.len();
-    println!("LLLLL {:?}", ln);
-
-    if cur_id.node_id == node_id {
-        let ref mut parent_node = c_tr.nodes_stack[ln - 1];
-        parent_node.process_child(cur_id);
-        let t = parent_node.node_id;
-        println!("PARENT {}", t);
-        return Some(t);
-    };
-
-
-    return None;
-}
-
-pub fn get_transaction_start_time(id: u64) -> f64 {
-    let tr_cache = TRANSACTION_CACHE.read().unwrap();
-    match tr_cache.get(&id) {
-        Some(tr) => {
-            if tr.nodes_stack.len() > 0 {
-                tr.nodes_stack[0].start_time;
+            return None;
+        };
+        let cur_id = match c_tr.nodes_stack.pop() {
+            Some(mut v) => {
+                v.set_endtime(end_time);
+                v.comp_exclusive();
+                c_tr.trace_node_count += 1;
+                v
             }
-            DEFAULT_TIME_VAL
-        }
-        None => DEFAULT_TIME_VAL,
-    }
-}
+            None => return None,
+        };
+        let ln = c_tr.nodes_stack.len();
+        println!("LLLLL {:?}", ln);
 
-pub fn get_transaction_end_time(id: u64) -> f64 {
-    let tr_cache = TRANSACTION_CACHE.read().unwrap();
-    match tr_cache.get(&id) {
-        Some(tr) => {
-            if tr.nodes_stack.len() > 0 {
-                tr.nodes_stack[0].end_time;
+        if cur_id.node_id == node_id {
+            let ref mut parent_node = c_tr.nodes_stack[ln - 1];
+            parent_node.process_child(cur_id);
+            let t = parent_node.node_id;
+            println!("PARENT {}", t);
+            return Some(t);
+        };
+
+
+        return None;
+    }
+    fn set_transaction_path(&mut self, id: u64, path: String) -> bool {
+        match self.0.get_mut(&id) {
+            Some(tr) => {
+                tr.set_path(path);
+                true
             }
-            DEFAULT_TIME_VAL
+            None => false,
         }
-        None => DEFAULT_TIME_VAL,
-    }
-}
-
-pub fn set_transaction_path(id: u64, path: String) -> bool {
-    let mut tr_cache = TRANSACTION_CACHE.write().unwrap();
-    match tr_cache.get_mut(&id) {
-        Some(tr) => {
-            tr.set_path(path);
-            true
-        }
-        None => false,
     }
 }
 
