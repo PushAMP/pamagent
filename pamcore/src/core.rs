@@ -11,6 +11,7 @@ lazy_static! {
     };
 }
 
+const DEFAULT_TIME_VAL: f64 = 0.0;
 
 #[derive(Debug, Serialize)]
 struct StackNode {
@@ -65,7 +66,6 @@ impl TransactionNode {
         self.path = path;
     }
 }
-
 
 pub fn set_transaction(id: u64, transaction: String, path: Option<String>) -> bool {
     let mut tr_cache = TRANSACTION_CACHE.write().unwrap();
@@ -162,40 +162,38 @@ pub fn pop_current(id: u64, node_id: u64, end_time: f64) -> Option<u64> {
 
 pub fn get_transaction_start_time(id: u64) -> f64 {
     let tr_cache = TRANSACTION_CACHE.read().unwrap();
-    let tr = match tr_cache.get(&id) {
-        Some(tr) => tr,
-        None => return 0.0,
-    };
-    let st: f64;
-    if tr.nodes_stack.len() > 0 {
-        st = tr.nodes_stack[0].start_time;
-    } else {
-        st = 0.0
-    };
-    st
+    match tr_cache.get(&id) {
+        Some(tr) => {
+            if tr.nodes_stack.len() > 0 {
+                tr.nodes_stack[0].start_time;
+            }
+            DEFAULT_TIME_VAL
+        }
+        None => DEFAULT_TIME_VAL,
+    }
 }
 
 pub fn get_transaction_end_time(id: u64) -> f64 {
     let tr_cache = TRANSACTION_CACHE.read().unwrap();
-    let tr = match tr_cache.get(&id) {
-        Some(tr) => tr,
-        None => return 0.0,
-    };
-    let st: f64;
-    if tr.nodes_stack.len() > 0 {
-        st = tr.nodes_stack[0].end_time;
-    } else {
-        st = 0.0
-    };
-    st
+    match tr_cache.get(&id) {
+        Some(tr) => {
+            if tr.nodes_stack.len() > 0 {
+                tr.nodes_stack[0].end_time;
+            }
+            DEFAULT_TIME_VAL
+        }
+        None => DEFAULT_TIME_VAL,
+    }
 }
 
 pub fn set_transaction_path(id: u64, path: String) -> bool {
     let mut tr_cache = TRANSACTION_CACHE.write().unwrap();
     match tr_cache.get_mut(&id) {
-        Some(tr) => tr.set_path(path),
-        None => return false,
-    };
-    true
+        Some(tr) => {
+            tr.set_path(path);
+            true
+        }
+        None => false,
+    }
 }
 

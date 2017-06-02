@@ -12,9 +12,7 @@ extern crate rand;
 
 use cpython::{PyResult, Python};
 
-
 mod core;
-
 
 py_module_initializer!(pamagent_core,
                        initpamagent_core,
