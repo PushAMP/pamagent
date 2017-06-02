@@ -7,7 +7,8 @@ def test_transaction():
     tr = Transaction(enabled=True)
     with tr:
         assert tr.enabled
-        assert tr.start_time
+        print(tr.start_time)
+        assert 0.0 == tr.start_time
 
 
 def test_transaction_disabled():
@@ -32,10 +33,10 @@ def test_drop_transaction():
     tr1 = Transaction(enabled=True)
     with tr:
         assert tr.enabled
-        assert tr.start_time
+        assert 0.0 == tr1.start_time
     with tr1:
         assert tr1.enabled
-        assert tr1.start_time
+        assert 0.0 == tr1.start_time
     tr1.enabled = True
     with pytest.raises(RuntimeError) as exc:
         tr1.__exit__(None, None, None)
