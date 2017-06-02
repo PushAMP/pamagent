@@ -9,67 +9,12 @@ extern crate serde_derive;
 #[macro_use]
 extern crate lazy_static;
 extern crate rand;
+
 use cpython::{PyResult, Python};
-use std::sync::RwLock;
-use std::collections::hash_map::Entry;
-use std::collections::HashMap;
-
-#[derive(Debug, Serialize)]
-struct StackNode {
-    node_id: u64,
-    childrens: Vec<StackNode>,
-    start_time: f64,
-    end_time: f64,
-    exclusive: f64,
-    node_count: u8,
-    duration: f64,
-}
-impl StackNode {
-    fn set_endtime(&mut self, end_time: f64) {
-        self.end_time = end_time;
-    }
-    fn set_duration(&mut self) -> f64 {
-        if self.end_time < self.start_time {
-            self.end_time = self.start_time
-        }
-        self.duration = self.end_time - self.start_time;
-        self.duration
-    }
 
 
-    fn comp_exclusive(&mut self) -> f64 {
-        self.exclusive += self.set_duration();
-        if self.exclusive < 0.0 {
-            self.exclusive = 0.0;
-        }
-        self.exclusive
+mod core;
 
-    }
-
-    fn process_child(&mut self, node: StackNode) {
-        self.exclusive -= node.duration;
-        self.childrens.push(node);
-    }
-}
-#[derive(Debug, Serialize)]
-struct TransactionNode {
-    base_name: String,
-    nodes_stack: Vec<StackNode>,
-    trace_node_count: u8,
-    guid: String,
-    path: String,
-}
-impl TransactionNode {
-    fn set_path(&mut self, path: String) {
-        self.path = path;
-    }
-}
-lazy_static! {
-    static ref TRANSACTION_CACHE: RwLock<HashMap<u64, TransactionNode>> = {
-        let m = RwLock::new(HashMap::new());
-        m
-    };
-}
 
 py_module_initializer!(pamagent_core,
                        initpamagent_core,
@@ -79,165 +24,66 @@ py_module_initializer!(pamagent_core,
     m.add(py,
           "set_transaction",
           py_fn!(py,
-                 set_transaction(id: u64, transaction: String, path: Option<String>)))?;
-    m.add(py, "get_transaction", py_fn!(py, get_transaction(id: u64)))?;
+                 set_transaction_py(id: u64, transaction: String, path: Option<String>)))?;
+    m.add(py,
+          "get_transaction",
+          py_fn!(py, get_transaction_py(id: u64)))?;
     m.add(py,
           "drop_transaction",
-          py_fn!(py, drop_transaction(id: u64)))?;
+          py_fn!(py, drop_transaction_py(id: u64)))?;
     m.add(py,
           "push_current",
-          py_fn!(py, push_current(id: u64, node_id: u64, start_time: f64)))?;
+          py_fn!(py, push_current_py(id: u64, node_id: u64, start_time: f64)))?;
     m.add(py,
           "pop_current",
-          py_fn!(py, pop_current(id: u64, node_id: u64, end_time: f64)))?;
+          py_fn!(py, pop_current_py(id: u64, node_id: u64, end_time: f64)))?;
     m.add(py,
           "get_transaction_start_time",
-          py_fn!(py, get_transaction_start_time(id: u64)))?;
+          py_fn!(py, get_transaction_start_time_py(id: u64)))?;
     m.add(py,
           "get_transaction_end_time",
-          py_fn!(py, get_transaction_end_time(id: u64)))?;
+          py_fn!(py, get_transaction_end_time_py(id: u64)))?;
     m.add(py,
           "set_transaction_path",
-          py_fn!(py, set_transaction_path(id: u64, path: String)))?;
+          py_fn!(py, set_transaction_path_py(id: u64, path: String)))?;
 
     Ok(())
 });
 
-fn set_transaction(_: Python,
-                   id: u64,
-                   transaction: String,
-                   path: Option<String>)
-                   -> PyResult<bool> {
-    let mut tr_cache = TRANSACTION_CACHE.write().unwrap();
-    match tr_cache.entry(id) {
-        Entry::Occupied(_) => Ok(false),
-        Entry::Vacant(v) => {
-            v.insert(TransactionNode {
-                         base_name: transaction,
-                         nodes_stack: vec![],
-                         trace_node_count: 0,
-                         guid: format!("{:x}", rand::random::<u64>()),
-                         path: path.unwrap_or(format!("")),
-                     });
-            Ok(true)
-        }
-    }
-}
-
-fn set_transaction_path(_: Python, id: u64, path: String) -> PyResult<bool> {
-    let mut tr_cache = TRANSACTION_CACHE.write().unwrap();
-    match tr_cache.get_mut(&id) {
-        Some(tr) => tr.set_path(path),
-        None => return Ok(false),
-    };
-    Ok(true)
-
+fn set_transaction_py(_: Python,
+                      id: u64,
+                      transaction: String,
+                      path: Option<String>)
+                      -> PyResult<bool> {
+    Ok(core::set_transaction(id, transaction, path))
 }
 
 
-fn get_transaction(_: Python, id: u64) -> PyResult<Option<u64>> {
-    let tr_cache = TRANSACTION_CACHE.read().unwrap();
-    match tr_cache.get(&id) {
-        Some(_) => Ok(Some(id)),
-        None => Ok(None),
-    }
+fn get_transaction_py(_: Python, id: u64) -> PyResult<Option<u64>> {
+    Ok(core::get_transaction(id))
 }
 
-fn get_transaction_start_time(_: Python, id: u64) -> PyResult<f64> {
-    let tr_cache = TRANSACTION_CACHE.read().unwrap();
-    let tr = match tr_cache.get(&id) {
-        Some(tr) => tr,
-        None => return Ok(0.0),
-    };
-    let st: f64;
-    if tr.nodes_stack.len() > 0 {
-        st = tr.nodes_stack[0].start_time;
-    } else {
-        st = 0.0
-    };
-    Ok(st)
+fn get_transaction_start_time_py(_: Python, id: u64) -> PyResult<f64> {
+    Ok(core::get_transaction_start_time(id))
 }
 
-fn get_transaction_end_time(_: Python, id: u64) -> PyResult<f64> {
-    let tr_cache = TRANSACTION_CACHE.read().unwrap();
-    let tr = match tr_cache.get(&id) {
-        Some(tr) => tr,
-        None => return Ok(0.0),
-    };
-    let st: f64;
-    if tr.nodes_stack.len() > 0 {
-        st = tr.nodes_stack[0].end_time;
-    } else {
-        st = 0.0
-    };
-    Ok(st)
+fn get_transaction_end_time_py(_: Python, id: u64) -> PyResult<f64> {
+    Ok(core::get_transaction_end_time(id))
 }
 
-fn push_current(_: Python, id: u64, node_id: u64, start_time: f64) -> PyResult<bool> {
-    let mut tr_cache = TRANSACTION_CACHE.write().unwrap();
-    let c_tr = match tr_cache.get_mut(&id) {
-        Some(v) => v,
-        None => return Ok(false),
-    };
-    c_tr.nodes_stack.push(StackNode {
-                              node_id: node_id,
-                              childrens: vec![],
-                              start_time: start_time,
-                              end_time: 0.0,
-                              exclusive: 0.0,
-                              node_count: 0,
-                              duration: 0.0,
-                          });
-    return Ok(true);
+fn push_current_py(_: Python, id: u64, node_id: u64, start_time: f64) -> PyResult<bool> {
+    Ok(core::push_current(id, node_id, start_time))
 }
 
-fn pop_current(_: Python, id: u64, node_id: u64, end_time: f64) -> PyResult<Option<u64>> {
-    let mut tr_cache = TRANSACTION_CACHE.write().unwrap();
-    let c_tr = match tr_cache.get_mut(&id) {
-        Some(v) => v,
-        None => return Ok(None),
-    };
-    let ln = c_tr.nodes_stack.len();
-    if ln == 1 {
-        let ref mut root_id = c_tr.nodes_stack[0];
-        root_id.set_endtime(end_time);
-        root_id.comp_exclusive();
-        c_tr.trace_node_count += 1;
-        return Ok(None);
-    };
-    let cur_id = match c_tr.nodes_stack.pop() {
-        Some(mut v) => {
-            v.set_endtime(end_time);
-            v.comp_exclusive();
-            c_tr.trace_node_count += 1;
-            v
-        }
-        None => return Ok(None),
-    };
-    let ln = c_tr.nodes_stack.len();
-    println!("LLLLL {:?}", ln);
-
-    if cur_id.node_id == node_id {
-        let ref mut parent_node = c_tr.nodes_stack[ln - 1];
-        parent_node.process_child(cur_id);
-        let t = parent_node.node_id;
-        println!("PARENT {}", t);
-        return Ok(Some(t));
-    };
-
-
-    return Ok(None);
+fn pop_current_py(_: Python, id: u64, node_id: u64, end_time: f64) -> PyResult<Option<u64>> {
+    Ok(core::pop_current(id, node_id, end_time))
 }
 
-fn drop_transaction(_: Python, id: u64) -> PyResult<bool> {
-    let mut tr_cache = TRANSACTION_CACHE.write().unwrap();
-    match tr_cache.remove(&id) {
-        Some(val) => {
-            let j = serde_json::to_string(&val).unwrap_or("".to_uppercase());
-            println!("{}", j);
-            Ok(true)
-        }
-        None => Ok(false),
-    }
+fn drop_transaction_py(_: Python, id: u64) -> PyResult<bool> {
+    Ok(core::drop_transaction(id))
+}
+
+fn set_transaction_path_py(_: Python, id: u64, path: String) -> PyResult<bool> {
+    Ok(core::set_transaction_path(id, path))
 }
 
