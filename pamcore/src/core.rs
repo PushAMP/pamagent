@@ -25,6 +25,17 @@ struct StackNode {
 }
 
 impl StackNode {
+    fn new(node_id: u64, start_time: f64) -> StackNode {
+        StackNode {
+            node_id: node_id,
+            childrens: vec![],
+            start_time: start_time,
+            end_time: DEFAULT_TIME_VAL,
+            exclusive: DEFAULT_TIME_VAL,
+            node_count: 0,
+            duration: DEFAULT_TIME_VAL,
+        }
+    }
     fn set_endtime(&mut self, end_time: f64) {
         self.end_time = end_time;
     }
@@ -35,8 +46,6 @@ impl StackNode {
         self.duration = self.end_time - self.start_time;
         self.duration
     }
-
-
     fn comp_exclusive(&mut self) -> f64 {
         self.exclusive += self.set_duration();
         if self.exclusive < 0.0 {
@@ -45,7 +54,6 @@ impl StackNode {
         self.exclusive
 
     }
-
     fn process_child(&mut self, node: StackNode) {
         self.exclusive -= node.duration;
         self.childrens.push(node);
@@ -141,15 +149,7 @@ impl TransactionCache for TrMap {
     fn push_current(&mut self, id: u64, node_id: u64, start_time: f64) -> bool {
         match self.0.get_mut(&id) {
             Some(v) => {
-                v.nodes_stack.push(StackNode {
-                                       node_id: node_id,
-                                       childrens: vec![],
-                                       start_time: start_time,
-                                       end_time: 0.0,
-                                       exclusive: 0.0,
-                                       node_count: 0,
-                                       duration: 0.0,
-                                   });
+                v.nodes_stack.push(StackNode::new(node_id, start_time));
                 true
             }
             None => false,
