@@ -31,7 +31,7 @@ class TimeTrace(object):
     def __enter__(self):
         if not self.transaction:
             return self
-        pamagent_core.push_current(self.transaction, id(self), time.time())
+        pamagent_core.push_current(self.transaction, id(self), time.time(), 1, None,None)
         self.activated = True
         return self
 
@@ -46,16 +46,6 @@ class TimeTrace(object):
         self.end_time = time.time()
         parent_id = pamagent_core.pop_current(transaction, id(self), self.end_time)
 
-
-    def create_node(self):
-        if self.node:
-            return self.node(**dict((k, self.__dict__[k])
-                                    for k in self.node._fields))
-        return self
-
-    def process_child(self, node):
-        self.children.append(node)
-        self.exclusive -= node.duration
 
 
 _ExternalNode = namedtuple('_ExternalNode',
@@ -145,10 +135,12 @@ class ExternalTrace(TimeTrace):
         return '<%s %s>' % (self.__class__.__name__, dict(
             library=self.library, url=self.url, method=self.method))
 
-    def create_node(self):
-        return ExternalNode(library=self.library, url=self.url, method=self.method, children=self.children,
-                            start_time=self.start_time, end_time=self.end_time, duration=self.duration,
-                            exclusive=self.exclusive, params=self.params)
+    def __enter__(self):
+        if not self.transaction:
+            return self
+        pamagent_core.push_current(self.transaction, id(self), time.time(), 2, self.url)
+        self.activated = True
+        return self
 
 
 def ExternalTraceWrapper(wrapped, library, url, method=None):

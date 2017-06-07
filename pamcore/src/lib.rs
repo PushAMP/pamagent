@@ -9,11 +9,13 @@ extern crate serde_derive;
 #[macro_use]
 extern crate lazy_static;
 extern crate rand;
+extern crate url;
 
 use cpython::{PyResult, Python};
 
 mod core;
 use core::TransactionCache;
+use url::Url;
 py_module_initializer!(pamagent_core,
                        initpamagent_core,
                        PyInit_pamagent_core,
@@ -31,7 +33,12 @@ py_module_initializer!(pamagent_core,
           py_fn!(py, drop_transaction_py(id: u64)))?;
     m.add(py,
           "push_current",
-          py_fn!(py, push_current_py(id: u64, node_id: u64, start_time: f64)))?;
+          py_fn!(py,
+                 push_current_py(id: u64,
+                                 node_id: u64,
+                                 start_time: f64,
+                                 node_type: u8,
+                                 url: Option<String>)))?;
     m.add(py,
           "pop_current",
           py_fn!(py, pop_current_py(id: u64, node_id: u64, end_time: f64)))?;
@@ -81,11 +88,30 @@ fn get_transaction_end_time_py(_: Python, id: u64) -> PyResult<f64> {
            .get_transaction_end_time(id))
 }
 
-fn push_current_py(_: Python, id: u64, node_id: u64, start_time: f64) -> PyResult<bool> {
+fn push_current_py(_: Python,
+                   id: u64,
+                   node_id: u64,
+                   start_time: f64,
+                   node_type: u8,
+                   url: Option<String>)
+                   -> PyResult<bool> {
+    let host;
+    let port;
+    match url {
+        Some(v) => {
+            let parse_url = Url::parse(&v).unwrap();
+            host = Some(parse_url.host_str().unwrap_or("undef").to_lowercase());
+            port = parse_url.port();
+        }
+        None => {
+            host = None;
+            port = None;
+        }
+    }
     Ok(core::TRANSACTION_CACHE
            .write()
            .unwrap()
-           .push_current(id, node_id, start_time))
+           .push_current(id, node_id, start_time, node_type, host, port))
 }
 
 fn pop_current_py(_: Python, id: u64, node_id: u64, end_time: f64) -> PyResult<Option<u64>> {

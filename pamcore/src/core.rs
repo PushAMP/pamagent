@@ -12,9 +12,66 @@ lazy_static! {
         m
     };
 }
+#[derive(Debug, Serialize)]
+enum StackNode {
+    Func(FuncNode),
+    External(ExternalNode),
+}
+
+impl StackNode {
+    fn get_start_time(&self) -> f64 {
+        match *self {
+            StackNode::Func(ref x) => x.start_time,
+            StackNode::External(ref x) => x.start_time,
+        }
+    }
+    fn get_end_time(&self) -> f64 {
+        match *self {
+            StackNode::Func(ref x) => x.end_time,
+            StackNode::External(ref x) => x.end_time,
+        }
+    }
+    fn set_endtime(&mut self, end_time: f64) {
+        match *self {
+            StackNode::Func(ref mut x) => x.set_endtime(end_time),
+            StackNode::External(ref mut x) => x.set_endtime(end_time),
+        }
+    }
+    fn comp_exclusive(&mut self) -> f64 {
+        match *self {
+            StackNode::Func(ref mut x) => x.comp_exclusive(),
+            StackNode::External(ref mut x) => x.comp_exclusive(),
+        }
+    }
+
+    fn get_node_id(&self) -> u64 {
+        match *self {
+            StackNode::Func(ref x) => x.node_id,
+            StackNode::External(ref x) => x.node_id,
+        }
+    }
+    fn get_duration(&self) -> f64 {
+        match *self {
+            StackNode::Func(ref x) => x.duration,
+            StackNode::External(ref x) => x.duration,
+        }
+    }
+    fn process_child(&mut self, node: StackNode) {
+        match *self {
+            StackNode::Func(ref mut x) => {
+                x.exclusive -= node.get_duration();
+                x.childrens.push(node);
+            }
+            StackNode::External(ref mut x) => {
+                x.exclusive -= node.get_duration();
+                x.childrens.push(node);
+            }
+        }
+    }
+}
 
 #[derive(Debug, Serialize)]
-struct StackNode {
+struct FuncNode {
     node_id: u64,
     childrens: Vec<StackNode>,
     start_time: f64,
@@ -24,9 +81,10 @@ struct StackNode {
     duration: f64,
 }
 
-impl StackNode {
-    fn new(node_id: u64, start_time: f64) -> StackNode {
-        StackNode {
+
+impl FuncNode {
+    fn new(node_id: u64, start_time: f64) -> FuncNode {
+        FuncNode {
             node_id: node_id,
             childrens: vec![],
             start_time: start_time,
@@ -52,11 +110,52 @@ impl StackNode {
             self.exclusive = 0.0;
         }
         self.exclusive
-
     }
-    fn process_child(&mut self, node: StackNode) {
-        self.exclusive -= node.duration;
-        self.childrens.push(node);
+}
+
+#[derive(Debug, Serialize)]
+struct ExternalNode {
+    node_id: u64,
+    childrens: Vec<StackNode>,
+    start_time: f64,
+    end_time: f64,
+    exclusive: f64,
+    node_count: u8,
+    duration: f64,
+    host: String,
+    port: u16,
+}
+
+impl ExternalNode {
+    fn new(node_id: u64, start_time: f64, host: String, port: u16) -> ExternalNode {
+        ExternalNode {
+            node_id: node_id,
+            childrens: vec![],
+            start_time: start_time,
+            end_time: DEFAULT_TIME_VAL,
+            exclusive: DEFAULT_TIME_VAL,
+            node_count: 0,
+            duration: DEFAULT_TIME_VAL,
+            host: host,
+            port: port,
+        }
+    }
+    fn set_endtime(&mut self, end_time: f64) {
+        self.end_time = end_time;
+    }
+    fn set_duration(&mut self) -> f64 {
+        if self.end_time < self.start_time {
+            self.end_time = self.start_time
+        }
+        self.duration = self.end_time - self.start_time;
+        self.duration
+    }
+    fn comp_exclusive(&mut self) -> f64 {
+        self.exclusive += self.set_duration();
+        if self.exclusive < 0.0 {
+            self.exclusive = 0.0;
+        }
+        self.exclusive
     }
 }
 
@@ -84,7 +183,14 @@ pub trait TransactionCache {
     fn set_transaction(&mut self, id: u64, transaction: String, path: Option<String>) -> bool;
     fn availability_transaction(&self, id: u64) -> Option<u64>;
     fn drop_transaction(&mut self, id: u64) -> bool;
-    fn push_current(&mut self, id: u64, node_id: u64, start_time: f64) -> bool;
+    fn push_current(&mut self,
+                    id: u64,
+                    node_id: u64,
+                    start_time: f64,
+                    node_type: u8,
+                    host: Option<String>,
+                    port: Option<u16>)
+                    -> bool;
     fn pop_current(&mut self, id: u64, node_id: u64, end_time: f64) -> Option<u64>;
     fn set_transaction_path(&mut self, id: u64, path: String) -> bool;
 }
@@ -112,7 +218,7 @@ impl TransactionCache for TrMap {
         match self.0.get(&id) {
             Some(tr) => {
                 if tr.nodes_stack.len() > 0 {
-                    tr.nodes_stack[0].start_time;
+                    tr.nodes_stack[0].get_start_time();
                 }
                 DEFAULT_TIME_VAL
             }
@@ -123,7 +229,7 @@ impl TransactionCache for TrMap {
         match self.0.get(&id) {
             Some(tr) => {
                 if tr.nodes_stack.len() > 0 {
-                    tr.nodes_stack[0].end_time;
+                    tr.nodes_stack[0].get_end_time();
                 }
                 DEFAULT_TIME_VAL
             }
@@ -146,10 +252,31 @@ impl TransactionCache for TrMap {
             None => false,
         }
     }
-    fn push_current(&mut self, id: u64, node_id: u64, start_time: f64) -> bool {
+    fn push_current(&mut self,
+                    id: u64,
+                    node_id: u64,
+                    start_time: f64,
+                    node_type: u8,
+                    host: Option<String>,
+                    port: Option<u16>)
+                    -> bool {
         match self.0.get_mut(&id) {
             Some(v) => {
-                v.nodes_stack.push(StackNode::new(node_id, start_time));
+                match node_type {
+                    1 => {
+                        v.nodes_stack
+                            .push(StackNode::Func(FuncNode::new(node_id, start_time)))
+                    }
+                    2 => {
+                        v.nodes_stack
+                            .push(StackNode::External(ExternalNode::new(node_id,
+                                                                        start_time,
+                                                                        host.unwrap_or("undef".to_lowercase()),
+                                                                        port.unwrap_or(0))))
+                    }
+                    _ => return false,
+                }
+
                 true
             }
             None => false,
@@ -163,9 +290,14 @@ impl TransactionCache for TrMap {
         let ln = c_tr.nodes_stack.len();
         if ln == 1 {
             let ref mut root_id = c_tr.nodes_stack[0];
-            root_id.set_endtime(end_time);
-            root_id.comp_exclusive();
-            c_tr.trace_node_count += 1;
+            match root_id {
+                _ => {
+                    root_id.set_endtime(end_time);
+                    root_id.comp_exclusive();
+                    c_tr.trace_node_count += 1;
+                }
+            }
+
             return None;
         };
         let cur_id = match c_tr.nodes_stack.pop() {
@@ -180,10 +312,10 @@ impl TransactionCache for TrMap {
         let ln = c_tr.nodes_stack.len();
         println!("LLLLL {:?}", ln);
 
-        if cur_id.node_id == node_id {
+        if cur_id.get_node_id() == node_id {
             let ref mut parent_node = c_tr.nodes_stack[ln - 1];
             parent_node.process_child(cur_id);
-            let t = parent_node.node_id;
+            let t = parent_node.get_node_id();
             println!("PARENT {}", t);
             return Some(t);
         };
