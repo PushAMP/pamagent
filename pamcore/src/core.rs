@@ -94,32 +94,34 @@ impl StackNode {
         match *self {
             StackNode::Func(ref x) => {
                 for u in &x.childrens {
-                    pla.push(PlainNode {
-                                 node_id: u.get_node_id(),
-                                 parent_id: x.node_id,
-                                 node_type: u.node_type().to_lowercase(),
-                                 start_time: u.get_start_time(),
-                                 end_time: u.get_end_time(),
-                                 exclusive: u.get_exclusive(),
-                                 duration: u.get_duration(),
-                                 library: None,
-                             });
+                    let pl_node: PlainNode = PlainNode {
+                        node_id: u.get_node_id(),
+                        parent_id: x.node_id,
+                        node_type: u.node_type(),
+                        start_time: u.get_start_time(),
+                        end_time: u.get_end_time(),
+                        exclusive: u.get_exclusive(),
+                        duration: u.get_duration(),
+                        library: None,
+                    };
+                    pla.push(pl_node);
                     let sub = u.get_parent();
                     pla.extend(sub);
                 }
             }
             StackNode::External(ref x) => {
                 for u in &x.childrens {
-                    pla.push(PlainNode {
-                                 node_id: u.get_node_id(),
-                                 parent_id: x.node_id,
-                                 node_type: u.node_type().to_lowercase(),
-                                 start_time: u.get_start_time(),
-                                 end_time: u.get_end_time(),
-                                 exclusive: u.get_exclusive(),
-                                 duration: u.get_duration(),
-                                 library: Some("".to_lowercase()),
-                             });
+                    let pl_node: PlainNode = PlainNode {
+                        node_id: u.get_node_id(),
+                        parent_id: x.node_id,
+                        node_type: u.node_type(),
+                        start_time: u.get_start_time(),
+                        end_time: u.get_end_time(),
+                        exclusive: u.get_exclusive(),
+                        duration: u.get_duration(),
+                        library: Some(""),
+                    };
+                    pla.push(pl_node);
                     let sub = u.get_parent();
                     pla.extend(sub);
                 }
@@ -141,15 +143,15 @@ struct FuncNode {
     duration: f64,
 }
 #[derive(Debug, Serialize)]
-struct PlainNode {
-    node_type: String,
+struct PlainNode<'a> {
+    node_type: &'a str,
     node_id: u64,
     parent_id: u64,
     start_time: f64,
     end_time: f64,
     exclusive: f64,
     duration: f64,
-    library: Option<String>,
+    library: Option<&'a str>,
 }
 
 impl FuncNode {
@@ -239,11 +241,11 @@ struct TransactionNode {
 }
 
 #[derive(Debug, Serialize)]
-struct PlainTransaction {
-    base_name: String,
-    nodes_stack: Vec<PlainNode>,
-    guid: String,
-    path: String,
+struct PlainTransaction<'a> {
+    base_name: &'a str,
+    nodes_stack: Vec<PlainNode<'a>>,
+    guid: &'a str,
+    path: &'a str,
 }
 
 impl TransactionNode {
@@ -325,10 +327,10 @@ impl TransactionCache for TrMap {
             Some(val) => {
                 let j = serde_json::to_string(&val).unwrap_or("".to_uppercase());
                 let f = PlainTransaction {
-                    base_name: val.base_name.to_lowercase(),
+                    base_name: &val.base_name,
                     nodes_stack: val.nodes_stack[0].get_parent(),
-                    guid: val.guid.to_lowercase(),
-                    path: val.path.to_lowercase(),
+                    guid: &val.guid,
+                    path: &val.path,
                 };
                 println!("{}", j);
                 println!("{:?}", f);
