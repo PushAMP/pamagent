@@ -85,19 +85,19 @@ impl StackNode {
     fn get_library(&self) -> Option<String> {
         match *self {
             StackNode::Func(_) => None,
-            StackNode::External(ref v) => Some(v.library.to_owned())
+            StackNode::External(ref v) => Some(v.library.to_owned()),
         }
     }
     fn get_host(&self) -> Option<String> {
         match *self {
             StackNode::Func(_) => None,
-            StackNode::External(ref v) => Some(v.host.to_owned())
+            StackNode::External(ref v) => Some(v.host.to_owned()),
         }
     }
     fn get_port(&self) -> Option<u16> {
         match *self {
             StackNode::Func(_) => None,
-            StackNode::External(ref v) => Some(v.port)
+            StackNode::External(ref v) => Some(v.port),
         }
     }
     fn get_parent(&self) -> Vec<PlainNode> {
@@ -116,7 +116,7 @@ impl StackNode {
                         duration: u.get_duration(),
                         library: u.get_library(),
                         host: None,
-                        port: None
+                        port: None,
                     };
                     pla.push(pl_node);
                     let sub = u.get_parent();
@@ -169,7 +169,7 @@ struct PlainNode<'a> {
     duration: f64,
     library: Option<String>,
     host: Option<String>,
-    port: Option<u16>
+    port: Option<u16>,
 }
 
 impl FuncNode {
@@ -214,11 +214,16 @@ struct ExternalNode {
     duration: f64,
     host: String,
     port: u16,
-    library: String
+    library: String,
 }
 
 impl ExternalNode {
-    fn new(node_id: u64, start_time: f64, host: String, port: u16, library: String) -> ExternalNode {
+    fn new(node_id: u64,
+           start_time: f64,
+           host: String,
+           port: u16,
+           library: String)
+           -> ExternalNode {
         ExternalNode {
             node_id: node_id,
             childrens: vec![],
@@ -289,7 +294,8 @@ pub trait TransactionCache {
                     start_time: f64,
                     node_type: u8,
                     host: Option<String>,
-                    port: Option<u16>, library:Option<String>)
+                    port: Option<u16>,
+                    library: Option<String>)
                     -> bool;
     fn pop_current(&mut self, id: u64, node_id: u64, end_time: f64) -> Option<u64>;
     fn set_transaction_path(&mut self, id: u64, path: String) -> bool;
@@ -304,12 +310,12 @@ impl<'b> TransactionCache for TrMap {
             Entry::Occupied(_) => false,
             Entry::Vacant(v) => {
                 v.insert(TransactionNode {
-                             base_name: transaction,
-                             nodes_stack: vec![],
-                             trace_node_count: 0,
-                             guid: format!("{:x}", rand::random::<u64>()),
-                             path: path.unwrap_or(format!("")),
-                         });
+                    base_name: transaction,
+                    nodes_stack: vec![],
+                    trace_node_count: 0,
+                    guid: format!("{:x}", rand::random::<u64>()),
+                    path: path.unwrap_or(format!("")),
+                });
                 true
             }
         }
@@ -367,7 +373,8 @@ impl<'b> TransactionCache for TrMap {
                     start_time: f64,
                     node_type: u8,
                     host: Option<String>,
-                    port: Option<u16>, library: Option<String>)
+                    port: Option<u16>,
+                    library: Option<String>)
                     -> bool {
         match self.0.get_mut(&id) {
             Some(v) => {
@@ -380,9 +387,12 @@ impl<'b> TransactionCache for TrMap {
                         v.nodes_stack
                             .push(StackNode::External(ExternalNode::new(node_id,
                                                                         start_time,
-                                                                        host.unwrap_or("undef".to_string())
+                                                                        host.unwrap_or("undef"
+                                                                                .to_string())
                                                                             .to_string(),
-                                                                        port.unwrap_or(0), library.unwrap_or("undef".to_string()))))
+                                                                        port.unwrap_or(0),
+                                                                        library.unwrap_or("undef"
+                                                                            .to_string()))))
                     }
                     _ => return false,
                 }
@@ -443,4 +453,3 @@ impl<'b> TransactionCache for TrMap {
         }
     }
 }
-
