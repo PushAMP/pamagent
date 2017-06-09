@@ -31,7 +31,7 @@ class TimeTrace(object):
     def __enter__(self):
         if not self.transaction:
             return self
-        pamagent_core.push_current(self.transaction, id(self), time.time(), 1, None,None)
+        pamagent_core.push_current(self.transaction, id(self), time.time())
         self.activated = True
         return self
 
@@ -138,7 +138,7 @@ class ExternalTrace(TimeTrace):
     def __enter__(self):
         if not self.transaction:
             return self
-        pamagent_core.push_current(self.transaction, id(self), time.time(), 2, self.url)
+        pamagent_core.push_current_external(self.transaction, id(self), time.time(), self.url, self.library)
         self.activated = True
         return self
 

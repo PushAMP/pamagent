@@ -55,7 +55,7 @@ class Transaction(object):
             self.enabled = False
             raise
 
-        pamagent_core.push_current(self.thread_id, id(self), time.time(), 1, None)
+        pamagent_core.push_current(self.thread_id, id(self), time.time())
         return self
 
     def __exit__(self, exc, value, tb):

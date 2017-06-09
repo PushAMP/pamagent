@@ -82,12 +82,24 @@ impl StackNode {
             StackNode::External(_) => "external",
         }
     }
-    // fn get_library(&self) -> &str {
-    //     match *self {
-    //         StackNode::Func(_) => None,
-    //         StackNode::External(v) => Some(v.library)
-    //     }
-    // }
+    fn get_library(&self) -> Option<String> {
+        match *self {
+            StackNode::Func(_) => None,
+            StackNode::External(ref v) => Some(v.library.to_owned())
+        }
+    }
+    fn get_host(&self) -> Option<String> {
+        match *self {
+            StackNode::Func(_) => None,
+            StackNode::External(ref v) => Some(v.host.to_owned())
+        }
+    }
+    fn get_port(&self) -> Option<u16> {
+        match *self {
+            StackNode::Func(_) => None,
+            StackNode::External(ref v) => Some(v.port)
+        }
+    }
     fn get_parent(&self) -> Vec<PlainNode> {
         let mut pla = Vec::new();
 
@@ -102,7 +114,9 @@ impl StackNode {
                         end_time: u.get_end_time(),
                         exclusive: u.get_exclusive(),
                         duration: u.get_duration(),
-                        library: None,
+                        library: u.get_library(),
+                        host: None,
+                        port: None
                     };
                     pla.push(pl_node);
                     let sub = u.get_parent();
@@ -119,7 +133,9 @@ impl StackNode {
                         end_time: u.get_end_time(),
                         exclusive: u.get_exclusive(),
                         duration: u.get_duration(),
-                        library: Some(""),
+                        library: u.get_library(),
+                        host: u.get_host(),
+                        port: u.get_port(),
                     };
                     pla.push(pl_node);
                     let sub = u.get_parent();
@@ -151,7 +167,9 @@ struct PlainNode<'a> {
     end_time: f64,
     exclusive: f64,
     duration: f64,
-    library: Option<&'a str>,
+    library: Option<String>,
+    host: Option<String>,
+    port: Option<u16>
 }
 
 impl FuncNode {
@@ -196,10 +214,11 @@ struct ExternalNode {
     duration: f64,
     host: String,
     port: u16,
+    library: String
 }
 
 impl ExternalNode {
-    fn new(node_id: u64, start_time: f64, host: String, port: u16) -> ExternalNode {
+    fn new(node_id: u64, start_time: f64, host: String, port: u16, library: String) -> ExternalNode {
         ExternalNode {
             node_id: node_id,
             childrens: vec![],
@@ -210,6 +229,7 @@ impl ExternalNode {
             duration: DEFAULT_TIME_VAL,
             host: host.to_string(),
             port: port,
+            library: library,
         }
     }
     fn set_endtime(&mut self, end_time: f64) {
@@ -269,7 +289,7 @@ pub trait TransactionCache {
                     start_time: f64,
                     node_type: u8,
                     host: Option<String>,
-                    port: Option<u16>)
+                    port: Option<u16>, library:Option<String>)
                     -> bool;
     fn pop_current(&mut self, id: u64, node_id: u64, end_time: f64) -> Option<u64>;
     fn set_transaction_path(&mut self, id: u64, path: String) -> bool;
@@ -347,7 +367,7 @@ impl<'b> TransactionCache for TrMap {
                     start_time: f64,
                     node_type: u8,
                     host: Option<String>,
-                    port: Option<u16>)
+                    port: Option<u16>, library: Option<String>)
                     -> bool {
         match self.0.get_mut(&id) {
             Some(v) => {
@@ -362,7 +382,7 @@ impl<'b> TransactionCache for TrMap {
                                                                         start_time,
                                                                         host.unwrap_or("undef".to_string())
                                                                             .to_string(),
-                                                                        port.unwrap_or(0))))
+                                                                        port.unwrap_or(0), library.unwrap_or("undef".to_string()))))
                     }
                     _ => return false,
                 }
