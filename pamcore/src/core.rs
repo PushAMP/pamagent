@@ -208,7 +208,7 @@ impl ExternalNode {
             exclusive: DEFAULT_TIME_VAL,
             node_count: 0,
             duration: DEFAULT_TIME_VAL,
-            host: host,
+            host: host.to_string(),
             port: port,
         }
     }
@@ -275,7 +275,7 @@ pub trait TransactionCache {
     fn set_transaction_path(&mut self, id: u64, path: String) -> bool;
 }
 
-impl TransactionCache for TrMap {
+impl<'b> TransactionCache for TrMap {
     fn new() -> TrMap {
         TrMap(HashMap::new())
     }
@@ -360,8 +360,8 @@ impl TransactionCache for TrMap {
                         v.nodes_stack
                             .push(StackNode::External(ExternalNode::new(node_id,
                                                                         start_time,
-                                                                        host.unwrap_or("undef"
-                                                                            .to_lowercase()),
+                                                                        host.unwrap_or("undef".to_string())
+                                                                            .to_string(),
                                                                         port.unwrap_or(0))))
                     }
                     _ => return false,
