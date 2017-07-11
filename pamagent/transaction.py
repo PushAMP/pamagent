@@ -1,6 +1,5 @@
 import logging
 import time
-from collections import namedtuple
 
 from pamagent import pamagent_core
 
