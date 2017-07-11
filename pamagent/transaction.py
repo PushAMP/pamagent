@@ -124,6 +124,10 @@ class Transaction(object):
     def path(self):
         return self._path
 
+    @property
+    def name(self):
+        return self._name
+
 
 class WebTransaction(Transaction):
     def __init__(self, environ):  # flake8: noqa

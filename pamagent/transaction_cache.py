@@ -25,7 +25,7 @@ def save_transaction(transaction):
     """
     Saves the specified transaction away under the thread ID of the current executing thread.
     """
-    res = pamagent_core.set_transaction(id=transaction.thread_id, transaction=transaction._name, path=transaction._path)
+    res = pamagent_core.set_transaction(id=transaction.thread_id, transaction=transaction.name, path=transaction.path)
     if not res:
         raise RuntimeError('Transaction already active')
 
