@@ -218,12 +218,13 @@ struct ExternalNode {
 }
 
 impl ExternalNode {
-    fn new(node_id: u64,
-           start_time: f64,
-           host: String,
-           port: u16,
-           library: String)
-           -> ExternalNode {
+    fn new(
+        node_id: u64,
+        start_time: f64,
+        host: String,
+        port: u16,
+        library: String,
+    ) -> ExternalNode {
         ExternalNode {
             node_id: node_id,
             childrens: vec![],
@@ -288,15 +289,16 @@ pub trait TransactionCache {
     fn set_transaction(&mut self, id: u64, transaction: String, path: Option<String>) -> bool;
     fn availability_transaction(&self, id: u64) -> Option<u64>;
     fn drop_transaction(&mut self, id: u64) -> bool;
-    fn push_current(&mut self,
-                    id: u64,
-                    node_id: u64,
-                    start_time: f64,
-                    node_type: u8,
-                    host: Option<String>,
-                    port: Option<u16>,
-                    library: Option<String>)
-                    -> bool;
+    fn push_current(
+        &mut self,
+        id: u64,
+        node_id: u64,
+        start_time: f64,
+        node_type: u8,
+        host: Option<String>,
+        port: Option<u16>,
+        library: Option<String>,
+    ) -> bool;
     fn pop_current(&mut self, id: u64, node_id: u64, end_time: f64) -> Option<u64>;
     fn set_transaction_path(&mut self, id: u64, path: String) -> bool;
 }
@@ -367,32 +369,32 @@ impl<'b> TransactionCache for TrMap {
             None => false,
         }
     }
-    fn push_current(&mut self,
-                    id: u64,
-                    node_id: u64,
-                    start_time: f64,
-                    node_type: u8,
-                    host: Option<String>,
-                    port: Option<u16>,
-                    library: Option<String>)
-                    -> bool {
+    fn push_current(
+        &mut self,
+        id: u64,
+        node_id: u64,
+        start_time: f64,
+        node_type: u8,
+        host: Option<String>,
+        port: Option<u16>,
+        library: Option<String>,
+    ) -> bool {
         match self.0.get_mut(&id) {
             Some(v) => {
                 match node_type {
                     1 => {
-                        v.nodes_stack
-                            .push(StackNode::Func(FuncNode::new(node_id, start_time)))
+                        v.nodes_stack.push(StackNode::Func(
+                            FuncNode::new(node_id, start_time),
+                        ))
                     }
                     2 => {
-                        v.nodes_stack
-                            .push(StackNode::External(ExternalNode::new(node_id,
-                                                                        start_time,
-                                                                        host.unwrap_or("undef"
-                                                                                .to_string())
-                                                                            .to_string(),
-                                                                        port.unwrap_or(0),
-                                                                        library.unwrap_or("undef"
-                                                                            .to_string()))))
+                        v.nodes_stack.push(StackNode::External(ExternalNode::new(
+                            node_id,
+                            start_time,
+                            host.unwrap_or("undef".to_string()).to_string(),
+                            port.unwrap_or(0),
+                            library.unwrap_or("undef".to_string()),
+                        )))
                     }
                     _ => return false,
                 }
