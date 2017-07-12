@@ -1,11 +1,10 @@
-import cgi
 import logging
 import time
-import urllib.parse
 
 from pamagent import pamagent_core
 
 from .transaction_cache import save_transaction, drop_transaction, current_thread_id, get_start_time, get_end_time
+
 
 _logger = logging.getLogger(__name__)
 
@@ -129,84 +128,4 @@ class Transaction(object):
         return self._name
 
 
-class WebTransaction(Transaction):
-    def __init__(self, environ):  # flake8: noqa
-        # The web transaction can be enabled/disabled by the value of the variable "pamagent.enabled" in the WSGI
-        # environ dictionary.
-        enabled = True
-        self._port = None
-        self._request_params = {}
-        super(WebTransaction, self).__init__(enabled)
-        self._name = "Uri"
-        if not self.enabled:
-            return
 
-        try:
-            self._port = int(environ.get['SERVER_PORT'])
-        except Exception:
-            pass
-
-        self._request_uri = environ.get('REQUEST_URI', None)
-        script_name = environ.get('SCRIPT_NAME', None)
-        path_info = environ.get('PATH_INFO', None)
-
-        if self._request_uri is not None:
-            self._request_uri = urllib.parse.urlparse(self._request_uri)[2]
-
-        if script_name is not None or path_info is not None:
-            if path_info is None:
-                self._path = script_name
-            elif script_name is None:
-                self._path = path_info
-            else:
-                self._path = script_name + path_info
-
-            self.save_transaction()
-
-            if self._request_uri is None:
-                self._request_uri = self._path
-        else:
-            if self._request_uri is not None:
-                self._path = self._request_uri
-                self.save_transaction()
-
-        now = time.time()
-
-        def _parse_time_stamp(time_stamp):
-            """
-            Converts time_stamp to seconds. Input can be microseconds, milliseconds or seconds
-            """
-            for divisor in (1000000.0, 1000.0, 1.0):
-                converted_time = time_stamp / divisor
-                if converted_time > now:
-                    return 0.0
-            return 0.0
-
-        queue_time_headers = ('HTTP_X_REQUEST_START', 'HTTP_X_QUEUE_START', 'mod_wsgi.request_start',
-                              'mod_wsgi.queue_start')
-        for queue_time_header in queue_time_headers:
-            value = environ.get(queue_time_header, None)
-            try:
-                if value.startswith('t='):
-                    try:
-                        self.queue_start = _parse_time_stamp(float(value[2:]))
-                    except Exception:
-                        pass
-                else:
-                    try:
-                        self.queue_start = _parse_time_stamp(float(value))
-                    except Exception:
-                        pass
-            except Exception:
-                pass
-
-            if self.queue_start > 0.0:
-                break
-
-        qs = environ.get('QUERY_STRING', None)
-
-        if qs:
-            params = urllib.parse.parse_qs(qs, keep_blank_values=True)
-            self._request_params.update(params)
-        self.url_name = 'unknown'
-        self.view_name = 'unknown'

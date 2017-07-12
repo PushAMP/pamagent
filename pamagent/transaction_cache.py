@@ -40,6 +40,15 @@ def drop_transaction(transaction):
         raise RuntimeError('No active transaction')
 
 
+def set_transaction_name(name):
+    """
+    Set transaction path by current thread ID
+    """
+    res = pamagent_core.set_transaction_path(id=current_thread_id(), path=name)
+    if not res:
+        raise RuntimeError('No active transaction')
+
+
 def get_start_time(transaction):
     return pamagent_core.get_transaction_start_time(id=transaction.thread_id)
 

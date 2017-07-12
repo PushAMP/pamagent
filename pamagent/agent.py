@@ -1,146 +1,16 @@
+import inspect
 import functools
 import logging
-import time
-from collections import namedtuple
-from urllib.parse import urlparse, urlunsplit
 
 from pamagent import pamagent_core
 
+from .web_transaction import WSGIApplicationWrapper
 from .transaction_cache import current_transaction
+from .trace import ExternalTrace
 from .wrapper import FuncWrapper, wrap_object
-from .trace import node_start_time, node_end_time, TraceNode
+
 
 _logger = logging.getLogger(__name__)
-
-TimeMetric = namedtuple('TimeMetric',
-                        ['name', 'scope', 'duration', 'exclusive'])
-
-
-class TimeTrace(object):
-    node = None
-
-    def __init__(self, transaction):
-        self.transaction = transaction
-        self.children = []
-        self.start_time = 0.0
-        self.end_time = 0.0
-        self.duration = 0.0
-        self.exclusive = 0.0
-        self.activated = False
-
-    def __enter__(self):
-        if not self.transaction:
-            return self
-        pamagent_core.push_current(self.transaction, id(self), time.time())
-        self.activated = True
-        return self
-
-    def __exit__(self, exc, value, tb):
-        if not self.transaction:
-            return
-        if not self.activated:
-            _logger.error('Runtime error. The __exit__() method was called prior to __enter__()')
-            return
-        transaction = self.transaction
-        self.transaction = None
-        self.end_time = time.time()
-        parent_id = pamagent_core.pop_current(transaction, id(self), self.end_time)
-
-
-
-_ExternalNode = namedtuple('_ExternalNode',
-                           ['library', 'url', 'method', 'children', 'start_time', 'end_time', 'duration', 'exclusive',
-                            'params'])
-
-
-class ExternalNode(_ExternalNode):
-    @property
-    def details(self):
-        if hasattr(self, '_details'):
-            return self._details
-
-        try:
-            self._details = urlparse(self.url or '')
-        except Exception:
-            self._details = urlparse('http://unknown.url')
-
-        return self._details
-
-    def time_metrics(self, stats, root, parent):
-        hostname = self.details.hostname or 'unknown'
-
-        try:
-            scheme = self.details.scheme.lower()
-            port = self.details.port
-        except Exception:
-            scheme = None
-            port = None
-
-        if (scheme, port) in (('http', 80), ('https', 443)):
-            port = None
-
-        netloc = port and ('%s:%s' % (hostname, port)) or hostname
-        name = 'External/%s/all' % netloc
-
-        yield TimeMetric(name=name, scope='', duration=self.duration, exclusive=self.exclusive)
-
-    def trace_node(self, stats, root, connections):
-
-        hostname = self.details.hostname or 'unknown'
-
-        try:
-            scheme = self.details.scheme.lower()
-            port = self.details.port
-        except Exception:
-            scheme = None
-            port = None
-
-        if (scheme, port) in (('http', 80), ('https', 443)):
-            port = None
-
-        netloc = port and ('%s:%s' % (hostname, port)) or hostname
-
-        method = self.method or ''
-
-        name = root.string_table.cache('External/%s/%s/%s' % (netloc, self.library, method))
-
-        start_time = node_start_time(root, self)
-        end_time = node_end_time(root, self)
-
-        children = []
-
-        root.trace_node_count += 1
-
-        params = self.params
-
-        details = self.details
-        url = urlunsplit((details.scheme, details.netloc, details.path, '', ''))
-
-        params['url'] = url
-
-        return TraceNode(start_time=start_time, end_time=end_time, name=name, params=params, children=children,
-                         label=None)
-
-
-class ExternalTrace(TimeTrace):
-    def __init__(self, transaction, library, url, method=None):
-        super(ExternalTrace, self).__init__(transaction)
-
-        self.library = library
-        self.url = url
-        self.method = method
-        self.params = {}
-
-    def __repr__(self):
-        return '<%s %s>' % (self.__class__.__name__, dict(
-            library=self.library, url=self.url, method=self.method))
-
-    def __enter__(self):
-        if not self.transaction:
-            return self
-        pamagent_core.push_current_external(self.transaction, id(self), time.time(), self.url, self.library)
-        self.activated = True
-        return self
 
 
 def ExternalTraceWrapper(wrapped, library, url, method=None):
@@ -184,12 +54,47 @@ def ExternalTraceWrapper(wrapped, library, url, method=None):
     return FuncWrapper(wrapped, literal_wrapper)
 
 
+def function_wrapper(wrapper):
+    def _wrapper(wrapped, instance, args, kwargs):
+        target_wrapped = args[0]
+        if instance is None:
+            target_wrapper = wrapper
+        elif inspect.isclass(instance):
+            target_wrapper = wrapper.__get__(None, instance)
+        else:
+            target_wrapper = wrapper.__get__(instance, type(instance))
+        return FuncWrapper(target_wrapped, target_wrapper)
+
+    return FuncWrapper(wrapper, _wrapper)
+
+
 def external_trace(library, url, method=None):
     return functools.partial(ExternalTraceWrapper, library=library, url=url, method=method)
 
 
 def wrap_external_trace(module, object_path, library, url, method=None):
     wrap_object(module, object_path, ExternalTraceWrapper, library, url, method)
+
+
+def post_function(function):
+    @function_wrapper
+    def _wrapper(wrapped, instance, args, kwargs):
+        result = wrapped(*args, **kwargs)
+        if instance is not None:
+            function(instance, *args, **kwargs)
+        else:
+            function(*args, **kwargs)
+        return result
+
+    return _wrapper
+
+
+def PostFunctionWrapper(wrapped, function):
+    return post_function(function)(wrapped)
+
+
+def wrap_post_function(module, object_path, function):
+    return wrap_object(module, object_path, PostFunctionWrapper, (function,))
 
 
 def instrument_requests_sessions(module):
@@ -208,3 +113,15 @@ def instrument_requests_api(module):
 
     if hasattr(module, 'request'):
         wrap_external_trace(module, 'request', 'requests', url_request)
+
+
+def instrument_django_core_handlers_wsgi(module):
+    """
+    Wrap the WSGI application entry point. If this is also wrapped from the WSGI script file or by the WSGI hosting
+    mechanism then those will take precedence.
+    """
+
+    import django
+
+    framework = ('Django', django.get_version())
+    module.WSGIHandler.__call__ = WSGIApplicationWrapper(module.WSGIHandler.__call__, framework=framework)
