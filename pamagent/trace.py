@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import Optional
 
 from pamagent import pamagent_core
 
@@ -10,7 +11,7 @@ _logger = logging.getLogger(__name__)
 class TimeTrace(object):
     node = None
 
-    def __init__(self, transaction):
+    def __init__(self, transaction:int):
         self.transaction = transaction
         self.children = []
         self.start_time = 0.0
@@ -22,7 +23,7 @@ class TimeTrace(object):
     def __enter__(self):
         if not self.transaction:
             return self
-        pamagent_core.push_current(self.transaction.thread_id, id(self), time.time())
+        pamagent_core.push_current(self.transaction, id(self), time.time())
         self.activated = True
         return self
 
@@ -35,11 +36,11 @@ class TimeTrace(object):
         transaction = self.transaction
         self.transaction = None
         self.end_time = time.time()
-        parent_id = pamagent_core.pop_current(transaction.thread_id, id(self), self.end_time)
+        parent_id = pamagent_core.pop_current(transaction, id(self), self.end_time)
 
 
 class FunctionTrace(TimeTrace):
-    def __init__(self, transaction, name):
+    def __init__(self, transaction:int, name:str):
         super(FunctionTrace, self).__init__(transaction)
         self.name = name
 
@@ -48,9 +49,8 @@ class FunctionTrace(TimeTrace):
 
 
 class ExternalTrace(TimeTrace):
-    def __init__(self, transaction, library, url, method=None):
+    def __init__(self, transaction:int, library:str, url:str, method:Optional[str]=None):
         super(ExternalTrace, self).__init__(transaction)
-
         self.library = library
         self.url = url
         self.method = method
@@ -66,14 +66,3 @@ class ExternalTrace(TimeTrace):
         pamagent_core.push_current_external(self.transaction, id(self), time.time(), self.url, self.library)
         self.activated = True
         return self
-
-    def __exit__(self, exc, value, tb):
-        if not self.transaction:
-            return
-        if not self.activated:
-            _logger.error('Runtime error. The __exit__() method was called prior to __enter__()')
-            return
-        transaction = self.transaction
-        self.transaction = None
-        self.end_time = time.time()
-        parent_id = pamagent_core.pop_current(transaction, id(self), self.end_time)
