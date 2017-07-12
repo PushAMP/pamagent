@@ -5,7 +5,7 @@ from rust_setuptools import build_rust_cmdclass, install_lib_including_rust, dev
 
 setup(
     name='pamagent',
-    version='0.0.1',
+    version='0.0.2',
     author='PushAMP LLC',
     author_email='devcore@pushamp.com',
     description=('Agent for PAM'),

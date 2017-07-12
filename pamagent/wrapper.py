@@ -1,3 +1,4 @@
+import functools
 import inspect
 import sys
 
@@ -62,3 +63,79 @@ def wrap_object(target_module, name, factory, *args, **kwargs):
     wrapper = factory(original, *args, **kwargs)
     setattr(parent, attribute, wrapper)
     return wrapper
+
+
+def _module_name(obj):
+    module_name = None
+    if hasattr(obj, '__objclass__'):
+        module_name = getattr(obj.__objclass__, '__module__', None)
+
+    if module_name is None:
+        module_name = getattr(obj, '__module__', None)
+
+    if module_name is None:
+        self = getattr(obj, '__self__', None)
+        if self is not None and hasattr(self, '__class__'):
+            module_name = getattr(self.__class__, '__module__', None)
+    if module_name is None and hasattr(obj, '__class__'):
+        module_name = getattr(obj.__class__, '__module__', None)
+
+    if module_name and module_name not in sys.modules:
+        module_name = '<%s>' % module_name
+
+    # Fallback to unknown.
+    if not module_name:
+        module_name = '<unknown>'
+
+    return module_name
+
+
+def _object_context(obj):
+    path = getattr(obj, '__qualname__', None)
+    if path is None and hasattr(obj, '__class__'):
+        path = getattr(obj.__class__, '__qualname__')
+    mname = _module_name(obj)
+    return mname, path
+
+
+def object_context(target):
+    """
+    Returns a tuple identifying the supplied object. This will be of the form (module, object_path).
+    """
+    if isinstance(target, functools.partial):
+        target = target.func
+
+    details = getattr(target, '_pm_object_path', None)
+    if details:
+        return details
+    parent = getattr(target, '_pm_parent', None)
+    if parent:
+        details = getattr(parent, '_pm_object_path', None)
+    if details:
+        return details
+    source = getattr(target, '_pm_last_object', None)
+    if source:
+        details = getattr(target, '_pm_object_path', None)
+        if details:
+            return details
+    else:
+        source = target
+    details = _object_context(source)
+    try:
+        if target is not source:
+            if parent:
+                parent._pm_object_path = details
+            target._pm_object_path = details
+        source._pm_object_path = details
+    except Exception:
+        pass
+    return details
+
+
+def callable_name(obj, separator=':'):
+    """
+    Returns a string name identifying the supplied object. This will be of the form 'module:object_path'.
+    If object were a function, then the name would be 'module:function. If a class, 'module:class'.
+    If a member function, 'module:class.function'.
+    """
+    return separator.join(object_context(obj))

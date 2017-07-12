@@ -1,10 +1,10 @@
 import logging
 import time
-from collections import namedtuple
 
 from pamagent import pamagent_core
 
 from .transaction_cache import save_transaction, drop_transaction, current_thread_id, get_start_time, get_end_time
+
 
 _logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class Transaction(object):
         self.enabled = False
         self.thread_id = current_thread_id()
         self._transaction_id = id(self)
-        self._name = None
+        self._name = "Trans"
         self.stopped = False
         self._path = ""
         if enabled:
@@ -122,3 +122,10 @@ class Transaction(object):
     @property
     def path(self):
         return self._path
+
+    @property
+    def name(self):
+        return self._name
+
+
+
