@@ -4,7 +4,8 @@ from django.test import RequestFactory
 
 import wrapt
 
-from pamagent.agent import instrument_requests_sessions, instrument_django_core_handlers_wsgi
+from pamagent.hooks.requests_hook import instrument_requests_sessions
+from pamagent.hooks.django_hook import instrument_django_core_handlers_wsgi
 from pamagent.transaction import Transaction
 
 

@@ -139,3 +139,17 @@ def callable_name(obj, separator=':'):
     If a member function, 'module:class.function'.
     """
     return separator.join(object_context(obj))
+
+
+def function_wrapper(wrapper):
+    def _wrapper(wrapped, instance, args, kwargs):
+        target_wrapped = args[0]
+        if instance is None:
+            target_wrapper = wrapper
+        elif inspect.isclass(instance):
+            target_wrapper = wrapper.__get__(None, instance)
+        else:
+            target_wrapper = wrapper.__get__(instance, type(instance))
+        return FuncWrapper(target_wrapped, target_wrapper)
+
+    return FuncWrapper(wrapper, _wrapper)

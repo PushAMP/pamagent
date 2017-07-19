@@ -1,8 +1,12 @@
 import logging
+import functools
 import time
 from typing import Optional
 
 from pamagent import pamagent_core
+
+from .wrapper import FuncWrapper, wrap_object
+from .transaction_cache import current_transaction
 
 
 _logger = logging.getLogger(__name__)
@@ -66,3 +70,52 @@ class ExternalTrace(TimeTrace):
         pamagent_core.push_current_external(self.transaction, id(self), time.time(), self.url, self.library)
         self.activated = True
         return self
+
+
+def ExternalTraceWrapper(wrapped, library, url, method=None):
+    def dynamic_wrapper(wrapped, instance, args, kwargs):
+        transaction = current_transaction()
+
+        if transaction is None:
+            return wrapped(*args, **kwargs)
+
+        if callable(url):
+            if instance is not None:
+                _url = url(instance, *args, **kwargs)
+            else:
+                _url = url(*args, **kwargs)
+
+        else:
+            _url = url
+
+        if callable(method):
+            if instance is not None:
+                _method = method(instance, *args, **kwargs)
+            else:
+                _method = method(*args, **kwargs)
+
+        else:
+            _method = method
+
+        with ExternalTrace(transaction, library, _url, _method):
+            return wrapped(*args, **kwargs)
+
+    def literal_wrapper(wrapped, instance, args, kwargs):
+        transaction = current_transaction()
+        if transaction is None:
+            return wrapped(*args, **kwargs)
+        with ExternalTrace(transaction, library, url, method):
+            return wrapped(*args, **kwargs)
+
+    if callable(url) or callable(method):
+        return FuncWrapper(wrapped, dynamic_wrapper)
+
+    return FuncWrapper(wrapped, literal_wrapper)
+
+
+def external_trace(library, url, method=None):
+    return functools.partial(ExternalTraceWrapper, library=library, url=url, method=method)
+
+
+def wrap_external_trace(module, object_path, library, url, method=None):
+    wrap_object(module, object_path, ExternalTraceWrapper, library, url, method)
