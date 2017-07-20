@@ -153,3 +153,24 @@ def function_wrapper(wrapper):
         return FuncWrapper(target_wrapped, target_wrapper)
 
     return FuncWrapper(wrapper, _wrapper)
+
+
+def post_function(function):
+    @function_wrapper
+    def _wrapper(wrapped, instance, args, kwargs):
+        result = wrapped(*args, **kwargs)
+        if instance is not None:
+            function(instance, *args, **kwargs)
+        else:
+            function(*args, **kwargs)
+        return result
+
+    return _wrapper
+
+
+def PostFunctionWrapper(wrapped, function):
+    return post_function(function)(wrapped)
+
+
+def wrap_post_function(module, object_path, function):
+    return wrap_object(module, object_path, PostFunctionWrapper, (function,))

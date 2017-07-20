@@ -7,7 +7,8 @@ import wrapt
 from pamagent.hooks.requests_hook import instrument_requests_sessions
 from pamagent.hooks.django_hook import instrument_django_core_handlers_wsgi
 from pamagent.transaction import Transaction
-
+from pamagent.agent import init
+from pamagent.wrapper import FuncWrapper
 
 global_settings.ROOT_URLCONF = "pamagent.tests.urls"
 global_settings.ALLOWED_HOSTS = ["*"]
@@ -32,3 +33,9 @@ def test_django_wrap():
     handler = WSGIHandler()
     response = handler(environ, lambda *a, **k: None)
     assert response.status_code == 200
+
+
+def test_hooks():
+    init()
+    import requests
+    assert type(requests.api.request) == FuncWrapper
