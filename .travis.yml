@@ -16,6 +16,7 @@ install:
   - export LIBRARY_PATH="$LIBRARY_PATH:$PYTHON_LIB"
   - export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PYTHON_LIB:$HOME/rust/lib"
   - rustc -V
-  - pip install tox-travis
+  - pip install pytest django requests
 script:
-  - tox
+  - python setup.py develop
+  - pytest
