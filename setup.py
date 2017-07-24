@@ -38,7 +38,7 @@ setup(
     license='MIT',
     keywords=['pam', 'rust', 'profiling', 'performance'],
     url='https://github.com/pushamp/pamagent',
-    tests_require=['tox'],
+    tests_require=['tox', 'django', 'requests'],
     cmdclass={
         # This enables 'setup.py build_rust', and makes it run
         # 'cargo extensions/cargo.toml' before building your package.
