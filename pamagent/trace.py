@@ -15,7 +15,7 @@ _logger = logging.getLogger(__name__)
 class TimeTrace(object):
     node = None
 
-    def __init__(self, transaction:int):
+    def __init__(self, transaction: int):
         self.transaction = transaction
         self.children = []
         self.start_time = 0.0
@@ -40,11 +40,11 @@ class TimeTrace(object):
         transaction = self.transaction
         self.transaction = None
         self.end_time = time.time()
-        parent_id = pamagent_core.pop_current(transaction, id(self), self.end_time)
+        pamagent_core.pop_current(transaction, id(self), self.end_time)
 
 
 class FunctionTrace(TimeTrace):
-    def __init__(self, transaction:int, name:str):
+    def __init__(self, transaction: int, name: str):
         super(FunctionTrace, self).__init__(transaction)
         self.name = name
 
@@ -53,7 +53,7 @@ class FunctionTrace(TimeTrace):
 
 
 class ExternalTrace(TimeTrace):
-    def __init__(self, transaction:int, library:str, url:str, method:Optional[str]=None):
+    def __init__(self, transaction: int, library: str, url: str, method: Optional[str]=None):
         super(ExternalTrace, self).__init__(transaction)
         self.library = library
         self.url = url

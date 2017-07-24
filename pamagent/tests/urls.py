@@ -7,4 +7,5 @@ def index(request):
     requests.get("http://ya.ru")
     return HttpResponse("You're looking at index %s")
 
+
 urlpatterns = [url("^$", index)]
