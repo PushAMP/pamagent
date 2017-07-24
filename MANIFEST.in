@@ -1,0 +1,3 @@
+recursive-include pamcore/src *
+include pamcore/Cargo.toml pamcore/Cargo.lock pamcore/rls.toml
+include rust_setuptools.py
