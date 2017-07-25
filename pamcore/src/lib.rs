@@ -14,7 +14,7 @@ extern crate url;
 use cpython::{PyResult, Python};
 
 mod core;
-use core::TransactionCache;
+use core::{TransactionCache, StackNode, FuncNode, ExternalNode};
 use url::Url;
 py_module_initializer!(
     pamagent_core,
@@ -32,17 +32,17 @@ py_module_initializer!(
                     transaction: String,
                     path: Option<String>
                 )
-            ),
+            )
         )?;
         m.add(
             py,
             "get_transaction",
-            py_fn!(py, get_transaction_py(id: u64)),
+            py_fn!(py, get_transaction_py(id: u64))
         )?;
         m.add(
             py,
             "drop_transaction",
-            py_fn!(py, drop_transaction_py(id: u64)),
+            py_fn!(py, drop_transaction_py(id: u64))
         )?;
         m.add(
             py,
@@ -55,7 +55,7 @@ py_module_initializer!(
                     start_time: f64,
                     func_name: Option<String>
                 )
-            ),
+            )
         )?;
         m.add(
             py,
@@ -69,7 +69,7 @@ py_module_initializer!(
                     url: String,
                     library: String
                 )
-            ),
+            )
         )?;
         m.add(
             py,
@@ -77,22 +77,22 @@ py_module_initializer!(
             py_fn!(
                 py,
                 pop_current_py(id: u64, node_id: u64, end_time: f64)
-            ),
+            )
         )?;
         m.add(
             py,
             "get_transaction_start_time",
-            py_fn!(py, get_transaction_start_time_py(id: u64)),
+            py_fn!(py, get_transaction_start_time_py(id: u64))
         )?;
         m.add(
             py,
             "get_transaction_end_time",
-            py_fn!(py, get_transaction_end_time_py(id: u64)),
+            py_fn!(py, get_transaction_end_time_py(id: u64))
         )?;
         m.add(
             py,
             "set_transaction_path",
-            py_fn!(py, set_transaction_path_py(id: u64, path: String)),
+            py_fn!(py, set_transaction_path_py(id: u64, path: String))
         )?;
 
         Ok(())
@@ -149,13 +149,13 @@ fn push_current_py(
 ) -> PyResult<bool> {
     Ok(core::TRANSACTION_CACHE.write().unwrap().push_current(
         id,
-        node_id,
-        start_time,
-        1,
-        None,
-        None,
-        None,
-        func_name,
+        StackNode::Func(
+            FuncNode::new(
+                node_id,
+                start_time,
+                func_name.unwrap_or("unknow".to_string()),
+            ),
+        ),
     ))
 }
 
@@ -175,13 +175,13 @@ fn push_current_external_py(
 
     Ok(core::TRANSACTION_CACHE.write().unwrap().push_current(
         id,
-        node_id,
-        start_time,
-        2,
-        host,
-        port,
-        Some(library),
-        None,
+        StackNode::External(ExternalNode::new(
+            node_id,
+            start_time,
+            host.unwrap_or("undef".to_string()).to_string(),
+            port.unwrap_or(0),
+            library,
+        )),
     ))
 }
 
