@@ -14,7 +14,7 @@ lazy_static! {
 }
 #[derive(Debug, Serialize)]
 #[serde(tag = "type")]
-enum StackNode {
+pub enum StackNode {
     Func(FuncNode),
     External(ExternalNode),
 }
@@ -159,7 +159,7 @@ impl StackNode {
 }
 
 #[derive(Debug, Serialize)]
-struct FuncNode {
+pub struct FuncNode {
     node_id: u64,
     childrens: Vec<StackNode>,
     start_time: f64,
@@ -185,7 +185,7 @@ struct PlainNode<'a> {
 }
 
 impl FuncNode {
-    fn new(node_id: u64, start_time: f64, func_name: String) -> FuncNode {
+    pub fn new(node_id: u64, start_time: f64, func_name: String) -> FuncNode {
         FuncNode {
             node_id: node_id,
             childrens: vec![],
@@ -217,7 +217,7 @@ impl FuncNode {
 }
 
 #[derive(Debug, Serialize)]
-struct ExternalNode {
+pub struct ExternalNode {
     node_id: u64,
     childrens: Vec<StackNode>,
     start_time: f64,
@@ -231,7 +231,7 @@ struct ExternalNode {
 }
 
 impl ExternalNode {
-    fn new(
+    pub fn new(
         node_id: u64,
         start_time: f64,
         host: String,
@@ -302,17 +302,7 @@ pub trait TransactionCache {
     fn set_transaction(&mut self, id: u64, transaction: String, path: Option<String>) -> bool;
     fn availability_transaction(&self, id: u64) -> Option<u64>;
     fn drop_transaction(&mut self, id: u64) -> bool;
-    fn push_current(
-        &mut self,
-        id: u64,
-        node_id: u64,
-        start_time: f64,
-        node_type: u8,
-        host: Option<String>,
-        port: Option<u16>,
-        library: Option<String>,
-        func_name: Option<String>,
-    ) -> bool;
+    fn push_current(&mut self, id: u64, node: StackNode) -> bool;
     fn pop_current(&mut self, id: u64, node_id: u64, end_time: f64) -> Option<u64>;
     fn set_transaction_path(&mut self, id: u64, path: String) -> bool;
 }
@@ -383,44 +373,16 @@ impl<'b> TransactionCache for TrMap {
             None => false,
         }
     }
-    fn push_current(
-        &mut self,
-        id: u64,
-        node_id: u64,
-        start_time: f64,
-        node_type: u8,
-        host: Option<String>,
-        port: Option<u16>,
-        library: Option<String>,
-        func_name: Option<String>,
-    ) -> bool {
+    fn push_current(&mut self, id: u64, node: StackNode) -> bool {
         match self.0.get_mut(&id) {
             Some(v) => {
-                match node_type {
-                    1 => {
-                        v.nodes_stack.push(StackNode::Func(FuncNode::new(
-                            node_id,
-                            start_time,
-                            func_name.unwrap_or("unknow".to_string()),
-                        )))
-                    }
-                    2 => {
-                        v.nodes_stack.push(StackNode::External(ExternalNode::new(
-                            node_id,
-                            start_time,
-                            host.unwrap_or("undef".to_string()).to_string(),
-                            port.unwrap_or(0),
-                            library.unwrap_or("undef".to_string()),
-                        )))
-                    }
-                    _ => return false,
-                }
-
+                v.nodes_stack.push(node);
                 true
             }
             None => false,
         }
     }
+
     fn pop_current(&mut self, id: u64, node_id: u64, end_time: f64) -> Option<u64> {
         let c_tr = match self.0.get_mut(&id) {
             Some(v) => v,
