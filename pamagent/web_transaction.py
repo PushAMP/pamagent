@@ -128,9 +128,8 @@ def WSGIApplicationWrapper(wrapped, application=None, name=None, group=None, fra
         try:
             if 'wsgi.input' in environ:
                 environ['wsgi.input'] = _WSGIInputWrapper(transaction, environ['wsgi.input'])
-            with FunctionTrace(transaction.thread_id, name='Application'):
-                with FunctionTrace(transaction.thread_id, name=callable_name(wrapped)):
-                    result = wrapped(*args, **kwargs)
+            with FunctionTrace(transaction.thread_id, name='Application', func_name=callable_name(wrapped)):
+                result = wrapped(*args, **kwargs)
         except:
             transaction.__exit__(*sys.exc_info())
             raise
