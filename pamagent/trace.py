@@ -44,12 +44,20 @@ class TimeTrace(object):
 
 
 class FunctionTrace(TimeTrace):
-    def __init__(self, transaction: int, name: str):
+    def __init__(self, transaction: int, func_name: str, name: str = None):
         super(FunctionTrace, self).__init__(transaction)
-        self.name = name
+        self.name = name or func_name
+        self.func_name = func_name
 
     def __repr__(self):
-        return '<%s %s>' % (self.__class__.__name__, dict(name=self.name))
+        return '<%s %s>' % (self.__class__.__name__, dict(name=self.name, func_name=self.func_name))
+
+    def __enter__(self):
+        if not self.transaction:
+            return self
+        pamagent_core.push_current(self.transaction, id(self), time.time(), func_name=self.func_name)
+        self.activated = True
+        return self
 
 
 class ExternalTrace(TimeTrace):

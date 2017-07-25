@@ -100,6 +100,14 @@ impl StackNode {
             StackNode::External(ref v) => Some(v.port),
         }
     }
+
+    fn get_func_name(&self) -> Option<String> {
+        match *self {
+            StackNode::Func(ref v) => Some(v.func_name.to_owned()),
+            StackNode::External(_) => None,
+        }
+    }
+
     fn get_parent(&self) -> Vec<PlainNode> {
         let mut pla = Vec::new();
 
@@ -117,6 +125,7 @@ impl StackNode {
                         library: u.get_library(),
                         host: None,
                         port: None,
+                        func_name: u.get_func_name(),
                     };
                     pla.push(pl_node);
                     let sub = u.get_parent();
@@ -136,6 +145,7 @@ impl StackNode {
                         library: u.get_library(),
                         host: u.get_host(),
                         port: u.get_port(),
+                        func_name: u.get_func_name(),
                     };
                     pla.push(pl_node);
                     let sub = u.get_parent();
@@ -157,6 +167,7 @@ struct FuncNode {
     exclusive: f64,
     node_count: u8,
     duration: f64,
+    func_name: String,
 }
 #[derive(Debug, Serialize)]
 struct PlainNode<'a> {
@@ -170,10 +181,11 @@ struct PlainNode<'a> {
     library: Option<String>,
     host: Option<String>,
     port: Option<u16>,
+    func_name: Option<String>,
 }
 
 impl FuncNode {
-    fn new(node_id: u64, start_time: f64) -> FuncNode {
+    fn new(node_id: u64, start_time: f64, func_name: String) -> FuncNode {
         FuncNode {
             node_id: node_id,
             childrens: vec![],
@@ -182,6 +194,7 @@ impl FuncNode {
             exclusive: DEFAULT_TIME_VAL,
             node_count: 0,
             duration: DEFAULT_TIME_VAL,
+            func_name: func_name,
         }
     }
     fn set_endtime(&mut self, end_time: f64) {
@@ -298,6 +311,7 @@ pub trait TransactionCache {
         host: Option<String>,
         port: Option<u16>,
         library: Option<String>,
+        func_name: Option<String>,
     ) -> bool;
     fn pop_current(&mut self, id: u64, node_id: u64, end_time: f64) -> Option<u64>;
     fn set_transaction_path(&mut self, id: u64, path: String) -> bool;
@@ -378,14 +392,17 @@ impl<'b> TransactionCache for TrMap {
         host: Option<String>,
         port: Option<u16>,
         library: Option<String>,
+        func_name: Option<String>,
     ) -> bool {
         match self.0.get_mut(&id) {
             Some(v) => {
                 match node_type {
                     1 => {
-                        v.nodes_stack.push(StackNode::Func(
-                            FuncNode::new(node_id, start_time),
-                        ))
+                        v.nodes_stack.push(StackNode::Func(FuncNode::new(
+                            node_id,
+                            start_time,
+                            func_name.unwrap_or("unknow".to_string()),
+                        )))
                     }
                     2 => {
                         v.nodes_stack.push(StackNode::External(ExternalNode::new(
