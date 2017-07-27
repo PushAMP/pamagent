@@ -67,7 +67,8 @@ py_module_initializer!(
                     node_id: u64,
                     start_time: f64,
                     url: String,
-                    library: String
+                    library: String,
+                    method: String
                 )
             )
         )?;
@@ -167,11 +168,13 @@ fn push_current_external_py(
     start_time: f64,
     url: String,
     library: String,
+    method: String
 ) -> PyResult<bool> {
 
     let parse_url = Url::parse(&url).unwrap();
     let host = Some(parse_url.host_str().unwrap_or("undef").to_string());
     let port = parse_url.port();
+    let path = parse_url.path();
 
     Ok(core::TRANSACTION_CACHE.write().unwrap().push_current(
         id,
@@ -181,6 +184,8 @@ fn push_current_external_py(
             host.unwrap_or("undef".to_string()).to_string(),
             port.unwrap_or(0),
             library,
+            method,
+            path
         )),
     ))
 }
