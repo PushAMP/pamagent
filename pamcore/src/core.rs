@@ -108,6 +108,20 @@ impl StackNode {
         }
     }
 
+    fn get_method(&self) -> Option<String> {
+        match *self {
+            StackNode::Func(_) => None,
+            StackNode::External(ref v) => Some(v.method.to_owned())
+        }
+    }
+
+    fn get_path(&self) -> Option<String> {
+        match *self {
+            StackNode::Func(_) => None,
+            StackNode::External(ref v) => Some(v.path.to_owned())
+        }
+    }
+
     fn get_parent(&self) -> Vec<PlainNode> {
         let mut pla = Vec::new();
 
@@ -126,6 +140,8 @@ impl StackNode {
                         host: None,
                         port: None,
                         func_name: u.get_func_name(),
+                        method: None,
+                        path: None
                     };
                     pla.push(pl_node);
                     let sub = u.get_parent();
@@ -146,6 +162,8 @@ impl StackNode {
                         host: u.get_host(),
                         port: u.get_port(),
                         func_name: u.get_func_name(),
+                        method: u.get_method(),
+                        path: u.get_path()
                     };
                     pla.push(pl_node);
                     let sub = u.get_parent();
@@ -182,6 +200,8 @@ struct PlainNode<'a> {
     host: Option<String>,
     port: Option<u16>,
     func_name: Option<String>,
+    method: Option<String>,
+    path: Option<String>
 }
 
 impl FuncNode {
@@ -228,6 +248,8 @@ pub struct ExternalNode {
     host: String,
     port: u16,
     library: String,
+    method: String,
+    path: String
 }
 
 impl ExternalNode {
@@ -237,6 +259,8 @@ impl ExternalNode {
         host: String,
         port: u16,
         library: String,
+        method: String,
+        path: &str
     ) -> ExternalNode {
         ExternalNode {
             node_id: node_id,
@@ -249,6 +273,8 @@ impl ExternalNode {
             host: host.to_string(),
             port: port,
             library: library,
+            method: method,
+            path: path.to_string()
         }
     }
     fn set_endtime(&mut self, end_time: f64) {

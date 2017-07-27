@@ -75,12 +75,13 @@ class ExternalTrace(TimeTrace):
     def __enter__(self):
         if not self.transaction:
             return self
-        pamagent_core.push_current_external(self.transaction, id(self), time.time(), self.url, self.library)
+        pamagent_core.push_current_external(self.transaction, id(self), time.time(), self.url, self.library,
+                                            self.method)
         self.activated = True
         return self
 
 
-def ExternalTraceWrapper(wrapped, library, url, method=None):
+def ExternalTraceWrapper(wrapped, library, url, method):
     def dynamic_wrapper(wrapped, instance, args, kwargs):
         transaction = current_transaction()
 
@@ -108,17 +109,8 @@ def ExternalTraceWrapper(wrapped, library, url, method=None):
         with ExternalTrace(transaction, library, _url, _method):
             return wrapped(*args, **kwargs)
 
-    def literal_wrapper(wrapped, instance, args, kwargs):
-        transaction = current_transaction()
-        if transaction is None:
-            return wrapped(*args, **kwargs)
-        with ExternalTrace(transaction, library, url, method):
-            return wrapped(*args, **kwargs)
+    return FuncWrapper(wrapped, dynamic_wrapper)
 
-    if callable(url) or callable(method):
-        return FuncWrapper(wrapped, dynamic_wrapper)
-
-    return FuncWrapper(wrapped, literal_wrapper)
 
 
 def external_trace(library, url, method=None):
