@@ -9,6 +9,25 @@ from setuptools.command.develop import develop
 from distutils.file_util import copy_file
 
 
+def _get_wildcard_so():
+    if sys.platform == "win32":
+        return "*.dll"
+    elif sys.platform == "darwin":
+        return "*.dylib"
+    else:
+        return "*.so"
+
+
+def _features():
+        version = sys.version_info
+        if (2, 7) < version < (2, 8):
+            return "python27-sys"
+        elif (3, 3) < version:
+            return "python3-sys"
+        else:
+            raise ValueError("Unsupported python version: %s" % sys.version)
+
+
 class RustBuildCommand(Command):
     """ Command for building rust crates via cargo. Don't use this directly; use the build_rust_cmdclass
     factory method.
@@ -35,23 +54,6 @@ class RustBuildCommand(Command):
     def finalize_options(self):
         pass
 
-    def features(self):
-        version = sys.version_info
-        if (2, 7) < version < (2, 8):
-            return "python27-sys"
-        elif (3, 3) < version:
-            return "python3-sys"
-        else:
-            raise ValueError("Unsupported python version: %s" % sys.version)
-
-    def _get_wildcard_so(self):
-        if sys.platform == "win32":
-            return "*.dll"
-        elif sys.platform == "darwin":
-            return "*.dylib"
-        else:
-            return "*.so"
-
     def _get_suffix(self):
         if self.debug:
             return "debug"
@@ -72,13 +74,13 @@ class RustBuildCommand(Command):
 
         # Execute cargo.
         try:
-            args = (["cargo", "build", "--manifest-path", self.cargo_toml_path, "--features",
-                     self.features()] + list(self.extra_cargo_args or []))
+            args = (["cargo", "build", "--manifest-path", self.cargo_toml_path, "--features", _features()]
+                    + list(self.extra_cargo_args or []))
             if not self.debug:
                 args.append("--release")
             if not self.quiet:
                 print(" ".join(args), file=sys.stderr)
-            output = subprocess.check_output(args, env=env)
+            output = subprocess.check_output(" ".join(args), env=env, shell=True)
         except subprocess.CalledProcessError as e:
             msg = "cargo failed with code: %d\n%s" % (e.returncode, e.output)
             raise Exception(msg)
@@ -93,7 +95,7 @@ class RustBuildCommand(Command):
 
         target_dir = os.path.join(os.path.dirname(self.cargo_toml_path), "target/", suffix)
 
-        wildcard_so = self._get_wildcard_so()
+        wildcard_so = _get_wildcard_so()
 
         try:
             dylib_path = glob.glob(os.path.join(target_dir, wildcard_so))[0]

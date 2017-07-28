@@ -112,7 +112,6 @@ def ExternalTraceWrapper(wrapped, library, url, method):
     return FuncWrapper(wrapped, dynamic_wrapper)
 
 
-
 def external_trace(library, url, method=None):
     return functools.partial(ExternalTraceWrapper, library=library, url=url, method=method)
 

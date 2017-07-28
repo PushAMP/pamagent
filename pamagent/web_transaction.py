@@ -1,13 +1,15 @@
+import logging
 import sys
 import time
 import urllib.parse
-
-from pamagent import pamagent_core
 
 from .trace import FunctionTrace
 from .transaction import Transaction
 from .transaction_cache import set_transaction_name
 from .wrapper import callable_name, FuncWrapper
+
+
+_logger = logging.getLogger(__name__)
 
 
 class WebTransaction(Transaction):
@@ -21,11 +23,11 @@ class WebTransaction(Transaction):
         self._name = "Uri"
         if not self.enabled:
             return
-
+        port = environ.get('SERVER_PORT')
         try:
-            self._port = int(environ.get['SERVER_PORT'])
-        except Exception:
-            pass
+            self._port = int(port)
+        except ValueError:
+            _logger.error("SERVER_PORT is not valid. Found %s expected integer" % port)
 
         self._request_uri = environ.get('REQUEST_URI', None)
         script_name = environ.get('SCRIPT_NAME', None)
@@ -51,9 +53,7 @@ class WebTransaction(Transaction):
                 self._path = self._request_uri
                 self.save_transaction()
 
-        now = time.time()
         qs = environ.get('QUERY_STRING', None)
-
         if qs:
             params = urllib.parse.parse_qs(qs, keep_blank_values=True)
             self._request_params.update(params)
@@ -62,9 +62,9 @@ class WebTransaction(Transaction):
 
 
 class _WSGIInputWrapper(object):
-    def __init__(self, transaction, input):
+    def __init__(self, transaction, input_stream):
         self.__transaction = transaction
-        self.__input = input
+        self.__input = input_stream
 
     def __getattr__(self, name):
         return getattr(self.__input, name)
@@ -111,7 +111,7 @@ def WSGIApplicationWrapper(wrapped, application=None, name=None, group=None, fra
         def _args(environ, start_response, *args, **kwargs):
             return environ, start_response
 
-        environ, start_response = _args(*args, **kwargs)
+        environ, _ = _args(*args, **kwargs)
 
         transaction = WebTransaction(environ)
         if framework is not None:
