@@ -1,8 +1,12 @@
 import functools
 import inspect
+import logging
 import sys
 
 from wrapt import BoundFunctionWrapper, FunctionWrapper, ObjectProxy
+
+
+_logger = logging.getLogger(__name__)
 
 
 class _WrapperBase(object):
@@ -127,8 +131,8 @@ def object_context(target):
                 parent._pm_object_path = details
             target._pm_object_path = details
         source._pm_object_path = details
-    except Exception:
-        pass
+    except Exception as exc:
+        logging.error("Error process object context. %s" % str(exc))
     return details
 
 
@@ -166,11 +170,3 @@ def post_function(function):
         return result
 
     return _wrapper
-
-
-def PostFunctionWrapper(wrapped, function):
-    return post_function(function)(wrapped)
-
-
-def wrap_post_function(module, object_path, function):
-    return wrap_object(module, object_path, PostFunctionWrapper, (function,))

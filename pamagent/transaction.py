@@ -44,7 +44,8 @@ class Transaction(object):
         drop_transaction(self)
 
     def __enter__(self):
-        assert (self._state == self.STATE_PENDING)
+        if self._state != self.STATE_PENDING:
+            RuntimeError("Transaction state invalid")
         if not self.enabled:
             return self
         self._state = self.STATE_RUNNING
