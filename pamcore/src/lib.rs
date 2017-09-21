@@ -2,7 +2,6 @@
 #![crate_type = "dylib"]
 #[macro_use]
 extern crate cpython;
-extern crate serde;
 extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
@@ -95,7 +94,11 @@ py_module_initializer!(
             "set_transaction_path",
             py_fn!(py, set_transaction_path_py(id: u64, path: String))
         )?;
-
+        m.add(
+            py,
+            "dump_transaction",
+            py_fn!(py, dump_transaction(id: u64))
+        )?;
         Ok(())
     }
 );
@@ -210,5 +213,14 @@ fn set_transaction_path_py(_: Python, id: u64, path: String) -> PyResult<bool> {
             .write()
             .unwrap()
             .set_transaction_path(id, path),
+    )
+}
+
+fn dump_transaction(_: Python, id:u64) -> PyResult<String> {
+    Ok(
+        core::TRANSACTION_CACHE
+            .write()
+            .unwrap()
+            .dump_transaction(id),
     )
 }

@@ -127,3 +127,15 @@ class Transaction(object):
     @property
     def name(self):
         return self._name
+
+    def dump(self):
+        _logger.warning("Please use this method only for debug")
+        return pamagent_core.dump_transaction(self.thread_id)
+
+
+def dump_current_transaction():
+    import json
+    _logger.warning("Please use this method only for debug")
+    p = pamagent_core.dump_transaction(current_thread_id())
+    if p:
+        return json.loads(p)
