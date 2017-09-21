@@ -111,14 +111,14 @@ impl StackNode {
     fn get_method(&self) -> Option<String> {
         match *self {
             StackNode::Func(_) => None,
-            StackNode::External(ref v) => Some(v.method.to_owned())
+            StackNode::External(ref v) => Some(v.method.to_owned()),
         }
     }
 
     fn get_path(&self) -> Option<String> {
         match *self {
             StackNode::Func(_) => None,
-            StackNode::External(ref v) => Some(v.path.to_owned())
+            StackNode::External(ref v) => Some(v.path.to_owned()),
         }
     }
 
@@ -141,7 +141,7 @@ impl StackNode {
                         port: None,
                         func_name: u.get_func_name(),
                         method: None,
-                        path: None
+                        path: None,
                     };
                     pla.push(pl_node);
                     let sub = u.get_parent();
@@ -163,7 +163,7 @@ impl StackNode {
                         port: u.get_port(),
                         func_name: u.get_func_name(),
                         method: u.get_method(),
-                        path: u.get_path()
+                        path: u.get_path(),
                     };
                     pla.push(pl_node);
                     let sub = u.get_parent();
@@ -201,7 +201,7 @@ struct PlainNode<'a> {
     port: Option<u16>,
     func_name: Option<String>,
     method: Option<String>,
-    path: Option<String>
+    path: Option<String>,
 }
 
 impl FuncNode {
@@ -249,7 +249,7 @@ pub struct ExternalNode {
     port: u16,
     library: String,
     method: String,
-    path: String
+    path: String,
 }
 
 impl ExternalNode {
@@ -260,7 +260,7 @@ impl ExternalNode {
         port: u16,
         library: String,
         method: String,
-        path: &str
+        path: &str,
     ) -> ExternalNode {
         ExternalNode {
             node_id: node_id,
@@ -274,7 +274,7 @@ impl ExternalNode {
             port: port,
             library: library,
             method: method,
-            path: path.to_string()
+            path: path.to_string(),
         }
     }
     fn set_endtime(&mut self, end_time: f64) {
@@ -317,6 +317,10 @@ impl TransactionNode {
     fn set_path(&mut self, path: String) {
         self.path = path;
     }
+    fn dump(&self) -> String {
+        let dump_str: String = serde_json::to_string(self).unwrap();
+        dump_str
+    }
 }
 
 pub struct TrMap(HashMap<u64, TransactionNode>);
@@ -331,6 +335,7 @@ pub trait TransactionCache {
     fn push_current(&mut self, id: u64, node: StackNode) -> bool;
     fn pop_current(&mut self, id: u64, node_id: u64, end_time: f64) -> Option<u64>;
     fn set_transaction_path(&mut self, id: u64, path: String) -> bool;
+    fn dump_transaction(&self, id: u64) -> String;
 }
 
 impl<'b> TransactionCache for TrMap {
@@ -457,6 +462,12 @@ impl<'b> TransactionCache for TrMap {
                 true
             }
             None => false,
+        }
+    }
+    fn dump_transaction(&self, id: u64) -> String {
+        match self.0.get(&id) {
+            Some(tr) => tr.dump(),
+            None => format!(""),
         }
     }
 }
