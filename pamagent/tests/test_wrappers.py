@@ -6,7 +6,7 @@ import wrapt
 
 from pamagent.hooks.requests_hook import instrument_requests_sessions, instrument_requests_api
 from pamagent.hooks.django_hook import instrument_django_core_handlers_wsgi
-from pamagent.transaction import Transaction, dump_current_transaction
+from pamagent.transaction import Transaction
 from pamagent.agent import init
 from pamagent.wrapper import FuncWrapper
 
