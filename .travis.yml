@@ -1,22 +1,30 @@
 language: python
 python:
-  - "3.5"
-  - "3.6"
+- '3.5'
+- '3.6'
 env:
-  - RUST_VERSION=nightly
+- RUST_VERSION=nightly
 sudo: false
 install:
-  - python -c "import sysconfig; print('\n'.join(map(repr,sorted(sysconfig.get_config_vars().items()))))"
-  - mkdir ~/rust-installer
-  - curl -sL https://static.rust-lang.org/rustup.sh -o ~/rust-installer/rustup.sh
-  - sh ~/rust-installer/rustup.sh --prefix=~/rust --spec=$RUST_VERSION -y --disable-sudo
-  - export PATH="$HOME/rust/bin:$PATH"
-  - export PYTHON_LIB=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
-  - find $PYTHON_LIB
-  - export LIBRARY_PATH="$LIBRARY_PATH:$PYTHON_LIB"
-  - export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PYTHON_LIB:$HOME/rust/lib"
-  - rustc -V
-  - pip install pytest django requests
+- python -c "import sysconfig; print('\n'.join(map(repr,sorted(sysconfig.get_config_vars().items()))))"
+- mkdir ~/rust-installer
+- curl -sL https://static.rust-lang.org/rustup.sh -o ~/rust-installer/rustup.sh
+- sh ~/rust-installer/rustup.sh --prefix=~/rust --spec=$RUST_VERSION -y --disable-sudo
+- export PATH="$HOME/rust/bin:$PATH"
+- export PYTHON_LIB=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
+- find $PYTHON_LIB
+- export LIBRARY_PATH="$LIBRARY_PATH:$PYTHON_LIB"
+- export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PYTHON_LIB:$HOME/rust/lib"
+- rustc -V
+- pip install pytest django requests
 script:
-  - python setup.py develop
-  - pytest
+- python setup.py develop
+- pytest
+deploy:
+  provider: pypi
+  user: dzhiltsov
+  distributions: "sdist bdist_wheel"
+  on:
+    tags: true
+  password:
+    secure: HIwSij/iAbIbSWhftGjkCbRFnNlp+cRPnDbL879WK3aMR3kX5yQ39/iMjnBc9XZA/OGf4AQlxIDLgfi/FpT6y+CRg94xVC+1EfZHDuBWW1Xr7zhP+v6pIDSfDaFQHscIZWzMWlPNr4MbE+MvLX7uI+MiKgE1CkelVvGAfyd91DVFykEkdSnrez7Qx2iGK5u0ThIiP/RwB+8JKTSl4KNaqWfhpTPZgfeWpJfKlCokvl4FGzwanMTr1nErOsW38c4EkSUz4gdFRqSReafYXCbXepLzS5a9ooqpTB05y2ERAySi35/b4yjdptI8lIwrCCyoFOxmtNykYReihnz6qqRCbBAt6ujKZY7AIRW1W+lxnVB5+ZjwjTR40G1KgJ/qg55Db/icHDEDZrMl7dKXU9rJqwfmqLarelJBcKGcmKeDiEaeHhDJaoD0WNBlyopJZej+iZmnSz65VQ7502BNWtt3E4ATETTfhEeoAHXlWOZZvg7/SIqvmkihsizuFiHJ0J16N95tiOrsATUwEMiZ+kIVTMcbICPGhsZ/PfiUakL9Dh7M9b6SkzR2DQyxmoK26JO63ardlnPDHvzs6BspOPuRCMsQnFQiGO2P2vpPbJavA6KwBIT6PV9Tb7nYLOxiVCZZ5wmCvAwWrlSfJfQjWvWgQ22ewin3iM8SAllzd9UfUhI=
