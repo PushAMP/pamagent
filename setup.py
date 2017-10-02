@@ -52,7 +52,7 @@ setup(
         'develop': develop_including_rust,
         'test': Tox,
     },
-    packages=['pamagent'],
+    packages=['pamagent', 'pamagent.hooks'],
     install_requires=[
         "wrapt==1.10.10",
     ],
