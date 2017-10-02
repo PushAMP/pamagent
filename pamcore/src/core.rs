@@ -3,13 +3,12 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use rand;
 use serde_json;
-
+use output;
 const DEFAULT_TIME_VAL: f64 = 0.0;
 
 lazy_static! {
     pub static  ref TRANSACTION_CACHE: RwLock<TrMap> = {
-        let m = RwLock::new(TrMap::new());
-        m
+        RwLock::new(TrMap::new())
     };
 }
 #[derive(Debug, Serialize)]
@@ -44,14 +43,6 @@ impl StackNode {
             StackNode::External(ref mut x) => x.comp_exclusive(),
         }
     }
-
-    fn get_exclusive(&self) -> f64 {
-        match *self {
-            StackNode::Func(ref x) => x.exclusive,
-            StackNode::External(ref x) => x.exclusive,
-        }
-    }
-
     fn get_node_id(&self) -> u64 {
         match *self {
             StackNode::Func(ref x) => x.node_id,
@@ -76,104 +67,6 @@ impl StackNode {
             }
         }
     }
-    fn node_type(&self) -> &str {
-        match *self {
-            StackNode::Func(_) => "func",
-            StackNode::External(_) => "external",
-        }
-    }
-    fn get_library(&self) -> Option<String> {
-        match *self {
-            StackNode::Func(_) => None,
-            StackNode::External(ref v) => Some(v.library.to_owned()),
-        }
-    }
-    fn get_host(&self) -> Option<String> {
-        match *self {
-            StackNode::Func(_) => None,
-            StackNode::External(ref v) => Some(v.host.to_owned()),
-        }
-    }
-    fn get_port(&self) -> Option<u16> {
-        match *self {
-            StackNode::Func(_) => None,
-            StackNode::External(ref v) => Some(v.port),
-        }
-    }
-
-    fn get_func_name(&self) -> Option<String> {
-        match *self {
-            StackNode::Func(ref v) => Some(v.func_name.to_owned()),
-            StackNode::External(_) => None,
-        }
-    }
-
-    fn get_method(&self) -> Option<String> {
-        match *self {
-            StackNode::Func(_) => None,
-            StackNode::External(ref v) => Some(v.method.to_owned()),
-        }
-    }
-
-    fn get_path(&self) -> Option<String> {
-        match *self {
-            StackNode::Func(_) => None,
-            StackNode::External(ref v) => Some(v.path.to_owned()),
-        }
-    }
-
-    fn get_parent(&self) -> Vec<PlainNode> {
-        let mut pla = Vec::new();
-
-        match *self {
-            StackNode::Func(ref x) => {
-                for u in &x.childrens {
-                    let pl_node: PlainNode = PlainNode {
-                        node_id: u.get_node_id(),
-                        parent_id: x.node_id,
-                        node_type: u.node_type(),
-                        start_time: u.get_start_time(),
-                        end_time: u.get_end_time(),
-                        exclusive: u.get_exclusive(),
-                        duration: u.get_duration(),
-                        library: u.get_library(),
-                        host: None,
-                        port: None,
-                        func_name: u.get_func_name(),
-                        method: None,
-                        path: None,
-                    };
-                    pla.push(pl_node);
-                    let sub = u.get_parent();
-                    pla.extend(sub);
-                }
-            }
-            StackNode::External(ref x) => {
-                for u in &x.childrens {
-                    let pl_node: PlainNode = PlainNode {
-                        node_id: u.get_node_id(),
-                        parent_id: x.node_id,
-                        node_type: u.node_type(),
-                        start_time: u.get_start_time(),
-                        end_time: u.get_end_time(),
-                        exclusive: u.get_exclusive(),
-                        duration: u.get_duration(),
-                        library: u.get_library(),
-                        host: u.get_host(),
-                        port: u.get_port(),
-                        func_name: u.get_func_name(),
-                        method: u.get_method(),
-                        path: u.get_path(),
-                    };
-                    pla.push(pl_node);
-                    let sub = u.get_parent();
-                    pla.extend(sub);
-                }
-            }
-        }
-
-        pla
-    }
 }
 
 #[derive(Debug, Serialize)]
@@ -186,22 +79,6 @@ pub struct FuncNode {
     node_count: u8,
     duration: f64,
     func_name: String,
-}
-#[derive(Debug, Serialize)]
-struct PlainNode<'a> {
-    node_type: &'a str,
-    node_id: u64,
-    parent_id: u64,
-    start_time: f64,
-    end_time: f64,
-    exclusive: f64,
-    duration: f64,
-    library: Option<String>,
-    host: Option<String>,
-    port: Option<u16>,
-    func_name: Option<String>,
-    method: Option<String>,
-    path: Option<String>,
 }
 
 impl FuncNode {
@@ -305,13 +182,6 @@ struct TransactionNode {
     path: String,
 }
 
-#[derive(Debug, Serialize)]
-struct PlainTransaction<'a> {
-    base_name: &'a str,
-    nodes_stack: Vec<PlainNode<'a>>,
-    guid: &'a str,
-    path: &'a str,
-}
 
 impl TransactionNode {
     fn set_path(&mut self, path: String) {
@@ -351,7 +221,7 @@ impl<'b> TransactionCache for TrMap {
                     nodes_stack: vec![],
                     trace_node_count: 0,
                     guid: format!("{:x}", rand::random::<u64>()),
-                    path: path.unwrap_or(format!("")),
+                    path: path.unwrap_or_else(||"".to_owned()),
                 });
                 true
             }
@@ -360,7 +230,7 @@ impl<'b> TransactionCache for TrMap {
     fn get_transaction_start_time(&self, id: u64) -> f64 {
         match self.0.get(&id) {
             Some(tr) => {
-                if tr.nodes_stack.len() > 0 {
+                if !tr.nodes_stack.is_empty() {
                     tr.nodes_stack[0].get_start_time();
                 }
                 DEFAULT_TIME_VAL
@@ -371,7 +241,7 @@ impl<'b> TransactionCache for TrMap {
     fn get_transaction_end_time(&self, id: u64) -> f64 {
         match self.0.get(&id) {
             Some(tr) => {
-                if tr.nodes_stack.len() > 0 {
+                if !tr.nodes_stack.is_empty() {
                     tr.nodes_stack[0].get_end_time();
                 }
                 DEFAULT_TIME_VAL
@@ -388,17 +258,8 @@ impl<'b> TransactionCache for TrMap {
     fn drop_transaction(&mut self, id: u64) -> bool {
         match self.0.remove(&id) {
             Some(val) => {
-                let j = serde_json::to_string(&val).unwrap_or("".to_uppercase());
-                let f = PlainTransaction {
-                    base_name: &val.base_name,
-                    nodes_stack: val.nodes_stack[0].get_parent(),
-                    guid: &val.guid,
-                    path: &val.path,
-                };
-                println!("{}", j);
-                println!("{:?}", f);
-                let sr = serde_json::to_string(&f).unwrap_or("".to_uppercase());
-                println!("{}", sr);
+                let j: String = serde_json::to_string(&val).unwrap_or_else(|_| "".to_uppercase());
+                output::OUTPUT_QUEUE.lock().unwrap().push_back(j);
                 true
             }
             None => false,
@@ -421,7 +282,7 @@ impl<'b> TransactionCache for TrMap {
         };
         let ln = c_tr.nodes_stack.len();
         if ln == 1 {
-            let ref mut root_id = c_tr.nodes_stack[0];
+            let root_id = &mut c_tr.nodes_stack[0];
             match root_id {
                 _ => {
                     root_id.set_endtime(end_time);
@@ -445,15 +306,15 @@ impl<'b> TransactionCache for TrMap {
         println!("LLLLL {:?}", ln);
 
         if cur_id.get_node_id() == node_id {
-            let ref mut parent_node = c_tr.nodes_stack[ln - 1];
+            let parent_node: &mut StackNode = &mut c_tr.nodes_stack[ln - 1];
             parent_node.process_child(cur_id);
-            let t = parent_node.get_node_id();
+            let t: u64 = parent_node.get_node_id();
             println!("PARENT {}", t);
             return Some(t);
         };
 
 
-        return None;
+        None
     }
     fn set_transaction_path(&mut self, id: u64, path: String) -> bool {
         match self.0.get_mut(&id) {
@@ -467,7 +328,7 @@ impl<'b> TransactionCache for TrMap {
     fn dump_transaction(&self, id: u64) -> String {
         match self.0.get(&id) {
             Some(tr) => tr.dump(),
-            None => format!(""),
+            None => "".to_owned(),
         }
     }
 }

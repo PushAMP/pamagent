@@ -13,8 +13,13 @@ extern crate url;
 use cpython::{PyResult, Python};
 
 mod core;
+mod output;
 use core::{TransactionCache, StackNode, FuncNode, ExternalNode};
 use url::Url;
+use self::output::Output;
+use self::output::PamCollectorOutput;
+
+
 py_module_initializer!(
     pamagent_core,
     initpamagent_core,
@@ -65,7 +70,7 @@ py_module_initializer!(
                     id: u64,
                     node_id: u64,
                     start_time: f64,
-                    url: String,
+                    url: &str,
                     library: String,
                     method: String
                 )
@@ -98,6 +103,11 @@ py_module_initializer!(
             py,
             "dump_transaction",
             py_fn!(py, dump_transaction(id: u64))
+        )?;
+        m.add(
+            py,
+            "activate",
+            py_fn!(py, activate(addr: &str))
         )?;
         Ok(())
     }
@@ -157,7 +167,7 @@ fn push_current_py(
             FuncNode::new(
                 node_id,
                 start_time,
-                func_name.unwrap_or("unknow".to_string()),
+                func_name.unwrap_or_else(|| "unknow".to_string()),
             ),
         ),
     ))
@@ -169,12 +179,12 @@ fn push_current_external_py(
     id: u64,
     node_id: u64,
     start_time: f64,
-    url: String,
+    url: &str,
     library: String,
     method: String
 ) -> PyResult<bool> {
 
-    let parse_url = Url::parse(&url).unwrap();
+    let parse_url = Url::parse(url).unwrap();
     let host = Some(parse_url.host_str().unwrap_or("undef").to_string());
     let port = parse_url.port();
     let path = parse_url.path();
@@ -184,7 +194,7 @@ fn push_current_external_py(
         StackNode::External(ExternalNode::new(
             node_id,
             start_time,
-            host.unwrap_or("undef".to_string()).to_string(),
+            host.unwrap_or_else(|| "undef".to_string()).to_string(),
             port.unwrap_or(0),
             library,
             method,
@@ -223,4 +233,10 @@ fn dump_transaction(_: Python, id:u64) -> PyResult<String> {
             .unwrap()
             .dump_transaction(id),
     )
+}
+fn activate(_: Python, addr: &str) -> PyResult<bool> {
+    let output_transport: PamCollectorOutput = PamCollectorOutput::new(addr.to_owned());
+    output_transport.start();
+    Ok(true)
+
 }
