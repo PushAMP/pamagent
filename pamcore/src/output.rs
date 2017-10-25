@@ -51,7 +51,7 @@ impl Output for PamCollectorOutput {
                                 Some(v) => {
                                     let _ = s.write(v.as_bytes());
                                 }
-                                None => println!("None"),
+                                None => (),
                             }
                         }
                         Err(_) => println!("Error create underlayng socket"),

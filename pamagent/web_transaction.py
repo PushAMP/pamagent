@@ -134,6 +134,7 @@ def WSGIApplicationWrapper(wrapped, application=None, name=None, group=None, fra
             transaction.__exit__(*sys.exc_info())
             raise
 
+        transaction.__exit__(None, None, None)
         return result
 
     return FuncWrapper(wrapped, _pm_wsgi_application_wrapper_)
