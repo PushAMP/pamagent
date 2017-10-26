@@ -22,6 +22,8 @@ class Transaction(object):
         self._name = "Trans"
         self.stopped = False
         self._path = ""
+        self._read_start = 0.0
+        self._read_end = 0.0
         if enabled:
             self.enabled = True
 
