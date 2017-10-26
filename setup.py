@@ -42,6 +42,7 @@ setup(
     cmdclass={
         'test': Tox,
     },
+    platforms='Posix; MacOS X; Windows',
     rust_extensions=[RustExtension('pamagent.pamagent_core', 'pamcore/Cargo.toml', binding=Binding.PyO3)],
     packages=['pamagent', 'pamagent.hooks'],
     install_requires=[
@@ -53,5 +54,6 @@ setup(
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
         ]
 )
