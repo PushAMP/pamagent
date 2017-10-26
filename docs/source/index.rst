@@ -17,7 +17,7 @@ Welcome to pamagent's documentation!
 
 PamagentCore
 -------------
-.. automodule:: pamagent_core
+.. automodule:: pamagent.pamagent_core
    :members:
 
 Indices and tables
