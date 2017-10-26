@@ -5,6 +5,9 @@ python:
 env:
 - RUST_VERSION=nightly
 sudo: false
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y tree
 install:
 - python -c "import sysconfig; print('\n'.join(map(repr,sorted(sysconfig.get_config_vars().items()))))"
 - mkdir ~/rust-installer
@@ -16,10 +19,14 @@ install:
 - export LIBRARY_PATH="$LIBRARY_PATH:$PYTHON_LIB"
 - export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PYTHON_LIB:$HOME/rust/lib"
 - rustc -V
-- pip install pytest django requests
+- pip install pytest django requests setuptools-rust==0.8.2 sphinx sphinx_rtd_theme travis-sphinx
 script:
 - python setup.py develop
+- tree
 - pytest
+- travis-sphinx build
+after_success:
+  - travis-sphinx deploy
 deploy:
   provider: pypi
   user: dzhiltsov
