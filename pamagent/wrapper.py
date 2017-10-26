@@ -132,7 +132,7 @@ def object_context(target):
             target._pm_object_path = details
         source._pm_object_path = details
     except Exception as exc:
-        logging.error("Error process object context. %s" % str(exc))
+        logging.debug("Error process object context. %s" % str(exc))
     return details
 
 
