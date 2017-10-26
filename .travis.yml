@@ -17,9 +17,14 @@ install:
 - export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PYTHON_LIB:$HOME/rust/lib"
 - rustc -V
 - pip install pytest django requests
+- pip install sphinx sphinx_rtd_theme
+- pip install travis-sphinx
 script:
 - python setup.py develop
 - pytest
+- travis-sphinx build
+after_success:
+  - travis-sphinx deploy
 deploy:
   provider: pypi
   user: dzhiltsov

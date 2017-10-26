@@ -3,7 +3,7 @@ import sys
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
-from rust_setuptools import build_rust_cmdclass, install_lib_including_rust, develop_including_rust
+from setuptools_rust import Binding, RustExtension
 
 
 class Tox(TestCommand):
@@ -40,24 +40,14 @@ setup(
     url='https://github.com/pushamp/pamagent',
     tests_require=['tox', 'django', 'requests'],
     cmdclass={
-        # This enables 'setup.py build_rust', and makes it run
-        # 'cargo extensions/cargo.toml' before building your package.
-        'build_rust': build_rust_cmdclass('pamcore/Cargo.toml', ext_name="pamagent.pamagent_core"),
-        # This causes your rust binary to be automatically installed
-        # with the package when install_lib runs (including when you
-        # run 'setup.py install'.
-        'install_lib': install_lib_including_rust,
-        # This supports development mode for your rust extension by
-        # causing the ext to be built in-place, according to its ext_name
-        'develop': develop_including_rust,
         'test': Tox,
     },
+    rust_extensions=[RustExtension('pamagent_core', 'pamcore/Cargo.toml', binding=Binding.PyO3)],
     packages=['pamagent', 'pamagent.hooks'],
     install_requires=[
         "wrapt==1.10.10",
     ],
     zip_safe=False,
-    package_data={'': ['rust_setuptools.py']},
     include_package_data=True,
     classifiers=[
         'Development Status :: 4 - Beta',
