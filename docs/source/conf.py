@@ -194,4 +194,4 @@ epub_copyright = copyright
 epub_exclude_files = ['search.html']
 
 
-sys.path.insert(0,"../pamagent")
+sys.path.insert(0,"../../pamagent")
