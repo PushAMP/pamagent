@@ -2,6 +2,7 @@ use std::collections::VecDeque;
 use std::io::prelude::*;
 use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use std::thread;
 
 lazy_static! {
@@ -46,12 +47,15 @@ impl Output for PamCollectorOutput {
                 loop {
                     match stream.try_clone() {
                         Ok(mut s) => {
-                            let val = OUTPUT_QUEUE.lock().unwrap().remove(0);
+                            let val = OUTPUT_QUEUE.lock().unwrap().pop_front();
                             match val {
                                 Some(v) => {
                                     let _ = s.write(v.as_bytes());
                                 }
-                                None => (),
+                                None => {
+                                    thread::sleep(Duration::from_millis(40));
+                                    ()
+                                }
                             }
                         }
                         Err(_) => println!("Error create underlayng socket"),
