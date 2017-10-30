@@ -303,13 +303,11 @@ impl<'b> TransactionCache for TrMap {
             None => return None,
         };
         let ln = c_tr.nodes_stack.len();
-        println!("LLLLL {:?}", ln);
 
         if cur_id.get_node_id() == node_id {
             let parent_node: &mut StackNode = &mut c_tr.nodes_stack[ln - 1];
             parent_node.process_child(cur_id);
             let t: u64 = parent_node.get_node_id();
-            println!("PARENT {}", t);
             return Some(t);
         };
 
