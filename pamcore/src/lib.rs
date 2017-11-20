@@ -207,6 +207,7 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
 
     /// Activate output transport to PAMCollector
     ///
+    /// :param str token: Secret token for auth on PAMCollector.
     /// :param str addr: Address with format host:port for connect to PAMCollector instance .
     /// :return: the return code.
     /// :rtype: bool
