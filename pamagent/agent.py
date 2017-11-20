@@ -7,6 +7,6 @@ def _init_builtin() -> None:
         django_hook.patch()
 
 
-def init(collector_host: str="pamcollector.pushamp.com")->None:
+def init(token: str, collector_host: str="pamcollector.pushamp.com")->None:
     _init_builtin()
-    pamagent_core.activate(collector_host)
+    pamagent_core.activate(token, collector_host)
