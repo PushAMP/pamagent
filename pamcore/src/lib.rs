@@ -207,13 +207,14 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
 
     /// Activate output transport to PAMCollector
     ///
+    /// :param str token: Secret token for auth on PAMCollector.
     /// :param str addr: Address with format host:port for connect to PAMCollector instance .
     /// :return: the return code.
     /// :rtype: bool
     ///
     #[pyfn(m, "activate")]
-    fn activate_py(addr: &str) -> PyResult<bool> {
-        let output_transport: PamCollectorOutput = PamCollectorOutput::new(addr.to_owned());
+    fn activate_py(token: &str, addr: &str) -> PyResult<bool> {
+        let output_transport: PamCollectorOutput = PamCollectorOutput::new(token.to_owned(), addr.to_owned());
         output_transport.start();
         Ok(true)
     }

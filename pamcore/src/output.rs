@@ -27,6 +27,7 @@ fn get_connection(addr: &str) -> Option<TcpStream> {
 
 pub struct PamCollectorOutput {
     addr: String,
+    token: String,
 }
 
 pub trait Output {
@@ -34,16 +35,18 @@ pub trait Output {
 }
 
 impl PamCollectorOutput {
-    pub fn new(addr: String) -> PamCollectorOutput {
-        PamCollectorOutput { addr: addr }
+    pub fn new(token: String, addr: String) -> PamCollectorOutput {
+        PamCollectorOutput { addr, token }
     }
 }
 
 impl Output for PamCollectorOutput {
     fn start(&self) {
         let addr: String = self.addr.clone();
+        let token: String = self.token.clone();
         thread::spawn(move || {
             fn stream_v(stream: &TcpStream) {
+                println!("Output loop started");
                 loop {
                     match stream.try_clone() {
                         Ok(mut s) => {
@@ -64,8 +67,26 @@ impl Output for PamCollectorOutput {
 
             }
             let stream: Option<TcpStream> = get_connection(&addr);
+
             match stream {
-                Some(s) => stream_v(&s),
+                Some(mut s) => {
+                    let _ = s.write(token.as_bytes()).and_then(|_| {
+                        let mut buffer = [0; 10];
+                        s.read(&mut buffer)
+                            .and_then(|r| match r {
+                                0 => {
+                                    println!("Token not valid");
+                                    Ok(0)
+                                }
+                                _ => {
+                                    println!("Token valid");
+                                    stream_v(&s);
+                                    Ok(r)
+                                }
+                            })
+                            .or(Ok(0))
+                    });
+                }
                 None => println!("None Connection"),
             };
         });

@@ -45,6 +45,6 @@ def test_django_wrap():
 
 
 def test_hooks():
-    init()
+    init(token="qwerty")
     import requests
     assert type(requests.api.request) == FuncWrapper

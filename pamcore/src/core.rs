@@ -221,7 +221,7 @@ impl<'b> TransactionCache for TrMap {
                     nodes_stack: vec![],
                     trace_node_count: 0,
                     guid: format!("{:x}", rand::random::<u64>()),
-                    path: path.unwrap_or_else(||"".to_owned()),
+                    path: path.unwrap_or_else(|| "".to_owned()),
                 });
                 true
             }
