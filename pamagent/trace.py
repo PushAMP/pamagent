@@ -103,7 +103,10 @@ class DatabaseTrace(TimeTrace):
         self._sql_statement = sql_statement(self.sql, self.dbapi2_module)
 
     def _operation(self):
-        return ""
+        return self._sql_statement.operation
+
+    def _target(self):
+        return self._sql_statement.target
 
     def _obfuse(self):
         return self._sql_statement.obfuscated
@@ -118,7 +121,7 @@ class DatabaseTrace(TimeTrace):
         # pamagent_core.push_current_database(self.transaction, id(self), time.time(), self.database_name, self.library,
         #                                     self.method)
         print(time.time(), self.dbapi2_module[0]._pam_database_product, self.database_name, self.host, self.port,
-              self._operation(), self._obfuse())
+              self._operation(), self._obfuse(), self._target(), self._operation())
         self.activated = True
         return self
 

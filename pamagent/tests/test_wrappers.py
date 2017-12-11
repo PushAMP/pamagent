@@ -74,7 +74,3 @@ def test_sqlite_hooks():
         conn.close()
         print(tr.dump())
     os.remove('example.db')
-
-
-
-
