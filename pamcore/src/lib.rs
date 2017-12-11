@@ -13,7 +13,7 @@ extern crate url;
 
 mod core;
 mod output;
-use core::{TransactionCache, StackNode, FuncNode, ExternalNode};
+use core::{TransactionCache, StackNode, FuncNode, ExternalNode, DatabaseNode};
 use url::Url;
 use self::output::Output;
 use self::output::PamCollectorOutput;
@@ -134,6 +134,28 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
         Ok(core::TRANSACTION_CACHE.write().unwrap().push_current(
             id,
             StackNode::External(ExternalNode::new(
+                node_id,
+                start_time,
+                host.unwrap_or_else(|| "undef".to_string()).to_string(),
+                port.unwrap_or(0),
+                library,
+                method,
+                path,
+            )),
+        ))
+    }
+
+
+    #[pyfn(m, "push_current_database")]
+    fn push_current_database_py(id: u64, node_id: u64, start_time: f64, url: &str, library: String, method: String) -> PyResult<bool> {
+        let parse_url = Url::parse(url).unwrap();
+        let host = Some(parse_url.host_str().unwrap_or("undef").to_string());
+        let port = parse_url.port();
+        let path = parse_url.path();
+
+        Ok(core::TRANSACTION_CACHE.write().unwrap().push_current(
+            id,
+            StackNode::Database(DatabaseNode::new(
                 node_id,
                 start_time,
                 host.unwrap_or_else(|| "undef".to_string()).to_string(),
