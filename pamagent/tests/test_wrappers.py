@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings, global_settings
 from django.core.handlers.wsgi import WSGIHandler
 from django.test import RequestFactory
@@ -9,6 +11,8 @@ from pamagent.hooks.django_hook import instrument_django_core_handlers_wsgi
 from pamagent.transaction import Transaction
 from pamagent.agent import init
 from pamagent.wrapper import FuncWrapper
+from pamagent.hooks.sqlite_hook import ConnectionFactory
+
 
 global_settings.ROOT_URLCONF = "pamagent.tests.urls"
 global_settings.ALLOWED_HOSTS = ["*"]
@@ -48,3 +52,25 @@ def test_hooks():
     init(token="qwerty")
     import requests
     assert type(requests.api.request) == FuncWrapper
+
+
+def test_sqlite_hooks():
+    init(token="qwerty")
+    import sqlite3
+    assert type(sqlite3.connect) == ConnectionFactory
+    tr = Transaction(enabled=True)
+    tr.set_transaction_path("/yt")
+    with tr:
+        conn = sqlite3.connect('example.db')
+
+        c = conn.cursor()
+        c.execute('''CREATE TABLE stocks
+                     (date TEXT, trans TEXT, symbol TEXT, qty REAL, price REAL)''')
+
+        c.execute("INSERT INTO stocks VALUES ('2006-01-05','BUY','RHAT',100,35.14)")
+        conn.commit()
+        c.execute("SELECT * FROM stocks WHERE symbol='RHAT'")
+        print(c.fetchone())
+        conn.close()
+        print(tr.dump())
+    os.remove('example.db')

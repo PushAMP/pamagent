@@ -105,7 +105,7 @@ def WSGIApplicationWrapper(wrapped, application=None, name=None, group=None, fra
     if framework is not None and not isinstance(framework, tuple):
         framework = (framework, None)
 
-    def _pm_wsgi_application_wrapper_(wrapped, instance, args, kwargs):
+    def _pam_wsgi_application_wrapper_(wrapped, instance, args, kwargs):
 
 
         def _args(environ, start_response, *args, **kwargs):
@@ -137,4 +137,4 @@ def WSGIApplicationWrapper(wrapped, application=None, name=None, group=None, fra
         transaction.__exit__(None, None, None)
         return result
 
-    return FuncWrapper(wrapped, _pm_wsgi_application_wrapper_)
+    return FuncWrapper(wrapped, _pam_wsgi_application_wrapper_)

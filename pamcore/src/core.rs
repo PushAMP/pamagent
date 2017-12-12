@@ -16,6 +16,7 @@ lazy_static! {
 pub enum StackNode {
     Func(FuncNode),
     External(ExternalNode),
+    Database(DatabaseNode),
 }
 
 impl StackNode {
@@ -23,36 +24,42 @@ impl StackNode {
         match *self {
             StackNode::Func(ref x) => x.start_time,
             StackNode::External(ref x) => x.start_time,
+            StackNode::Database(ref x) => x.start_time,
         }
     }
     fn get_end_time(&self) -> f64 {
         match *self {
             StackNode::Func(ref x) => x.end_time,
             StackNode::External(ref x) => x.end_time,
+            StackNode::Database(ref x) => x.end_time,
         }
     }
     fn set_endtime(&mut self, end_time: f64) {
         match *self {
             StackNode::Func(ref mut x) => x.set_endtime(end_time),
             StackNode::External(ref mut x) => x.set_endtime(end_time),
+            StackNode::Database(ref mut x) => x.set_endtime(end_time),
         }
     }
     fn comp_exclusive(&mut self) -> f64 {
         match *self {
             StackNode::Func(ref mut x) => x.comp_exclusive(),
             StackNode::External(ref mut x) => x.comp_exclusive(),
+            StackNode::Database(ref mut x) => x.comp_exclusive(),
         }
     }
     fn get_node_id(&self) -> u64 {
         match *self {
             StackNode::Func(ref x) => x.node_id,
             StackNode::External(ref x) => x.node_id,
+            StackNode::Database(ref x) => x.node_id,
         }
     }
     fn get_duration(&self) -> f64 {
         match *self {
             StackNode::Func(ref x) => x.duration,
             StackNode::External(ref x) => x.duration,
+            StackNode::Database(ref x) => x.duration,
         }
     }
     fn process_child(&mut self, node: StackNode) {
@@ -62,6 +69,10 @@ impl StackNode {
                 x.childrens.push(node);
             }
             StackNode::External(ref mut x) => {
+                x.exclusive -= node.get_duration();
+                x.childrens.push(node);
+            },
+            StackNode::Database(ref mut x) => {
                 x.exclusive -= node.get_duration();
                 x.childrens.push(node);
             }
@@ -172,6 +183,74 @@ impl ExternalNode {
         self.exclusive
     }
 }
+
+
+#[derive(Debug, Serialize)]
+pub struct DatabaseNode {
+    node_id: u64,
+    childrens: Vec<StackNode>,
+    start_time: f64,
+    end_time: f64,
+    exclusive: f64,
+    node_count: u8,
+    duration: f64,
+    host: String,
+    port: u16,
+    database_product: String,
+    database_name: String,
+    operation: String,
+    target: String,
+    sql: String,
+}
+
+impl DatabaseNode {
+    pub fn new(
+        node_id: u64,
+        start_time: f64,
+        host: String,
+        port: u16,
+        database_product: String,
+        database_name: String,
+        operation: String,
+        target: String,
+        sql: String
+    ) -> DatabaseNode {
+        DatabaseNode {
+            node_id: node_id,
+            childrens: vec![],
+            start_time: start_time,
+            end_time: DEFAULT_TIME_VAL,
+            exclusive: DEFAULT_TIME_VAL,
+            node_count: 0,
+            duration: DEFAULT_TIME_VAL,
+            host: host.to_string(),
+            port: port,
+            database_name: database_name.to_string(),
+            database_product: database_product.to_string(),
+            operation: operation.to_string(),
+            target: target.to_string(),
+            sql: sql,
+        }
+    }
+    fn set_endtime(&mut self, end_time: f64) {
+        self.end_time = end_time;
+    }
+    fn set_duration(&mut self) -> f64 {
+        if self.end_time < self.start_time {
+            self.end_time = self.start_time
+        }
+        self.duration = self.end_time - self.start_time;
+        self.duration
+    }
+    fn comp_exclusive(&mut self) -> f64 {
+        self.exclusive += self.set_duration();
+        if self.exclusive < 0.0 {
+            self.exclusive = 0.0;
+        }
+        self.exclusive
+    }
+}
+
 
 #[derive(Debug, Serialize)]
 struct TransactionNode {

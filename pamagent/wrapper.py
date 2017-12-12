@@ -9,7 +9,7 @@ from wrapt import BoundFunctionWrapper, FunctionWrapper, ObjectProxy
 _logger = logging.getLogger(__name__)
 
 
-class _WrapperBase(object):
+class _WrapperBase(ObjectProxy):
     def __setattr__(self, name, value):
         if name.startswith('_pam_'):
             name = name.replace('_pam_', '_self_', 1)
@@ -109,17 +109,17 @@ def object_context(target):
     if isinstance(target, functools.partial):
         target = target.func
 
-    details = getattr(target, '_pm_object_path', None)
+    details = getattr(target, '_pam_object_path', None)
     if details:
         return details
-    parent = getattr(target, '_pm_parent', None)
+    parent = getattr(target, '_pam_parent', None)
     if parent:
-        details = getattr(parent, '_pm_object_path', None)
+        details = getattr(parent, '_pam_object_path', None)
     if details:
         return details
-    source = getattr(target, '_pm_last_object', None)
+    source = getattr(target, '_pam_last_object', None)
     if source:
-        details = getattr(target, '_pm_object_path', None)
+        details = getattr(target, '_pam_object_path', None)
         if details:
             return details
     else:
@@ -128,9 +128,9 @@ def object_context(target):
     try:
         if target is not source:
             if parent:
-                parent._pm_object_path = details
-            target._pm_object_path = details
-        source._pm_object_path = details
+                parent._pam_object_path = details
+            target._pam_object_path = details
+        source._pam_object_path = details
     except Exception as exc:
         logging.debug("Error process object context. %s" % str(exc))
     return details

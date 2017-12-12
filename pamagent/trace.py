@@ -4,10 +4,10 @@ import time
 from typing import Optional
 
 from pamagent import pamagent_core
+from pamagent.utils.sql_statement import sql_statement
 
 from .wrapper import FuncWrapper, wrap_object
 from .transaction_cache import current_transaction
-
 
 _logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class FunctionTrace(TimeTrace):
 
 
 class ExternalTrace(TimeTrace):
-    def __init__(self, transaction: int, library: str, url: str, method: Optional[str]=None):
+    def __init__(self, transaction: int, library: str, url: str, method: Optional[str] = None):
         super(ExternalTrace, self).__init__(transaction)
         self.library = library
         self.url = url
@@ -77,6 +77,50 @@ class ExternalTrace(TimeTrace):
             return self
         pamagent_core.push_current_external(self.transaction, id(self), time.time(), self.url, self.library,
                                             self.method)
+        self.activated = True
+        return self
+
+
+class DatabaseTrace(TimeTrace):
+    __slots__ = ['sql', 'dbapi2_module', 'connect_params', 'cursor_params', 'sql_parameters', 'execute_params', 'host',
+                 'port', 'database_name', '_sql_statement']
+
+    def __init__(self, transaction, sql, dbapi2_module=None, connect_params=None, cursor_params=None,
+                 sql_parameters=None, execute_params=None, host=None, port=None, database_name=None):
+        super(DatabaseTrace, self).__init__(transaction)
+
+        self.sql = sql
+
+        self.dbapi2_module = dbapi2_module
+
+        self.connect_params = connect_params
+        self.cursor_params = cursor_params
+        self.sql_parameters = sql_parameters
+        self.execute_params = execute_params
+        self.host = host
+        self.port = port
+        self.database_name = database_name
+        self._sql_statement = sql_statement(self.sql, self.dbapi2_module)
+
+    def _operation(self):
+        return self._sql_statement.operation
+
+    def _target(self):
+        return self._sql_statement.target
+
+    def _obfuse(self):
+        return self._sql_statement.obfuscated
+
+    def __repr__(self):
+        return '<%s %s>' % (self.__class__.__name__, dict(
+            sql=self.sql, dbapi2_module=self.dbapi2_module))
+
+    def __enter__(self):
+        if not self.transaction:
+            return self
+        pamagent_core.push_current_database(self.transaction, id(self), time.time(),
+                                            self.dbapi2_module[0]._pam_database_product, self.database_name, self.host,
+                                            self.port, self._operation(), self._target(), self._obfuse())
         self.activated = True
         return self
 
@@ -118,3 +162,42 @@ def external_trace(library, url, method=None):
 
 def wrap_external_trace(module, object_path, library, url, method=None):
     wrap_object(module, object_path, ExternalTraceWrapper, library, url, method)
+
+
+def register_database_client(dbapi2_module, database_product, quoting_style='single', instance_info=None):
+    _logger.debug('Registering database client %r where database is %r, quoting style is %r.',
+                  dbapi2_module, database_product, quoting_style)
+
+    dbapi2_module._pam_database_product = database_product
+    dbapi2_module._pam_quoting_style = quoting_style
+    dbapi2_module._pam_instance_info = instance_info
+    dbapi2_module._pam_datastore_instance_feature_flag = False
+
+
+def DatabaseTraceWrapper(wrapped, sql, dbapi2_module=None):
+    def _pam_database_trace_wrapper_(wrapped, instance, args, kwargs):
+        transaction = current_transaction()
+
+        if transaction is None:
+            return wrapped(*args, **kwargs)
+
+        if callable(sql):
+            if instance is not None:
+                _sql = sql(instance, *args, **kwargs)
+            else:
+                _sql = sql(*args, **kwargs)
+        else:
+            _sql = sql
+
+        with DatabaseTrace(transaction, _sql, dbapi2_module):
+            return wrapped(*args, **kwargs)
+
+    return FuncWrapper(wrapped, _pam_database_trace_wrapper_)
+
+
+def database_trace(sql, dbapi2_module=None):
+    return functools.partial(DatabaseTraceWrapper, sql=sql, dbapi2_module=dbapi2_module)
+
+
+def wrap_database_trace(module, object_path, sql, dbapi2_module=None):
+    wrap_object(module, object_path, DatabaseTraceWrapper, (sql, dbapi2_module))
