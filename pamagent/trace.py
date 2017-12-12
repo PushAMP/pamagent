@@ -164,18 +164,14 @@ def wrap_external_trace(module, object_path, library, url, method=None):
     wrap_object(module, object_path, ExternalTraceWrapper, library, url, method)
 
 
-def register_database_client(dbapi2_module, database_product, quoting_style='single', explain_query=None,
-                             explain_stmts=[], instance_info=None):
+def register_database_client(dbapi2_module, database_product, quoting_style='single', instance_info=None):
     _logger.debug('Registering database client module %r where database '
                   'is %r, quoting style is %r, explain query statement is %r and '
                   'the SQL statements on which explain plans can be run are %r.',
-                  dbapi2_module, database_product, quoting_style, explain_query,
-                  explain_stmts)
+                  dbapi2_module, database_product, quoting_style)
 
     dbapi2_module._pam_database_product = database_product
     dbapi2_module._pam_quoting_style = quoting_style
-    dbapi2_module._pam_explain_query = explain_query
-    dbapi2_module._pam_explain_stmts = explain_stmts
     dbapi2_module._pam_instance_info = instance_info
     dbapi2_module._pam_datastore_instance_feature_flag = False
 
