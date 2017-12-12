@@ -165,9 +165,7 @@ def wrap_external_trace(module, object_path, library, url, method=None):
 
 
 def register_database_client(dbapi2_module, database_product, quoting_style='single', instance_info=None):
-    _logger.debug('Registering database client module %r where database '
-                  'is %r, quoting style is %r, explain query statement is %r and '
-                  'the SQL statements on which explain plans can be run are %r.',
+    _logger.debug('Registering database client %r where database is %r, quoting style is %r.',
                   dbapi2_module, database_product, quoting_style)
 
     dbapi2_module._pam_database_product = database_product
