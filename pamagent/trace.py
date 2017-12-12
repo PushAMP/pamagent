@@ -82,11 +82,11 @@ class ExternalTrace(TimeTrace):
 
 
 class DatabaseTrace(TimeTrace):
-    __async_explain_plan_logged = False
+    __slots__ = ['sql', 'dbapi2_module', 'connect_params', 'cursor_params', 'sql_parameters', 'execute_params', 'host',
+                 'port', 'database_name', '_sql_statement']
 
     def __init__(self, transaction, sql, dbapi2_module=None, connect_params=None, cursor_params=None,
                  sql_parameters=None, execute_params=None, host=None, port=None, database_name=None):
-
         super(DatabaseTrace, self).__init__(transaction)
 
         self.sql = sql
@@ -118,10 +118,9 @@ class DatabaseTrace(TimeTrace):
     def __enter__(self):
         if not self.transaction:
             return self
-        # pamagent_core.push_current_database(self.transaction, id(self), time.time(), self.database_name, self.library,
-        #                                     self.method)
-        print(time.time(), self.dbapi2_module[0]._pam_database_product, self.database_name, self.host, self.port,
-              self._operation(), self._obfuse(), self._target(), self._operation())
+        pamagent_core.push_current_database(self.transaction, id(self), time.time(),
+                                            self.dbapi2_module[0]._pam_database_product, self.database_name, self.host,
+                                            self.port, self._operation(), self._target(), self._obfuse())
         self.activated = True
         return self
 

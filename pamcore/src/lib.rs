@@ -145,25 +145,34 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
         ))
     }
 
-
+    /// Push database trace node to current transaction
+    /// :param int id: Transaction ID. ThreadID as usual.
+    /// :param int node_id: ID of TransactionNode. Object.__id__ as usual.
+    /// :param float start_time: Timestamp when TransactionNode is activated
+    /// :param str database_product: Name of database product
+    /// :param str database_name: Name of database name or database file path
+    /// :param str host: Host of database instanse
+    /// :param int port: Port of database instanse
+    /// :param str operation: SQL Operation
+    /// :param str target: Target table/view
+    /// :param str sql: Obfuscated sql
+    ///
     #[pyfn(m, "push_current_database")]
-    fn push_current_database_py(id: u64, node_id: u64, start_time: f64, url: &str, library: String, method: String) -> PyResult<bool> {
-        let parse_url = Url::parse(url).unwrap();
-        let host = Some(parse_url.host_str().unwrap_or("undef").to_string());
-        let port = parse_url.port();
-        let path = parse_url.path();
-
+    fn push_current_database_py(id: u64, node_id: u64, start_time: f64,
+                                database_product: String,
+                                database_name: String,
+                                host: Option<String>,
+                                port: Option<u16>,
+                                operation: String,
+                                target: String,
+                                sql: String) -> PyResult<bool> {
+        let host: String = host.unwrap_or("".to_string());
+        let port: u16 = port.unwrap_or(0);
         Ok(core::TRANSACTION_CACHE.write().unwrap().push_current(
             id,
             StackNode::Database(DatabaseNode::new(
-                node_id,
-                start_time,
-                host.unwrap_or_else(|| "undef".to_string()).to_string(),
-                port.unwrap_or(0),
-                library,
-                method,
-                path,
-            )),
+                node_id, start_time,host, port,database_product, database_name, operation, target,
+                sql)),
         ))
     }
 

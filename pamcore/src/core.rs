@@ -196,11 +196,12 @@ pub struct DatabaseNode {
     duration: f64,
     host: String,
     port: u16,
-    library: String,
-    method: String,
-    path: String,
+    database_product: String,
+    database_name: String,
+    operation: String,
+    target: String,
+    sql: String,
 }
-
 
 impl DatabaseNode {
     pub fn new(
@@ -208,9 +209,11 @@ impl DatabaseNode {
         start_time: f64,
         host: String,
         port: u16,
-        library: String,
-        method: String,
-        path: &str,
+        database_product: String,
+        database_name: String,
+        operation: String,
+        target: String,
+        sql: String
     ) -> DatabaseNode {
         DatabaseNode {
             node_id: node_id,
@@ -222,9 +225,11 @@ impl DatabaseNode {
             duration: DEFAULT_TIME_VAL,
             host: host.to_string(),
             port: port,
-            library: library,
-            method: method,
-            path: path.to_string(),
+            database_name: database_name.to_string(),
+            database_product: database_product.to_string(),
+            operation: operation.to_string(),
+            target: target.to_string(),
+            sql: sql,
         }
     }
     fn set_endtime(&mut self, end_time: f64) {

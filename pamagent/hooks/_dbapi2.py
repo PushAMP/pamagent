@@ -62,12 +62,14 @@ class ConnectionWrapper(_WrapperBase):
 
     def commit(self):
         transaction = current_transaction()
-        with DatabaseTrace(transaction, 'COMMIT', self._pam_dbapi2_module, self._pam_connect_params):
+        with DatabaseTrace(transaction, 'COMMIT', self._pam_dbapi2_module,
+                           database_name=self._pam_connect_params[0][0]):
             return self.__wrapped__.commit()
 
     def rollback(self):
         transaction = current_transaction()
-        with DatabaseTrace(transaction, 'ROLLBACK', self._pam_dbapi2_module, self._pam_connect_params):
+        with DatabaseTrace(transaction, 'ROLLBACK', self._pam_dbapi2_module, self._pam_connect_params,
+                           database_name=self._pam_connect_params[0][0]):
             return self.__wrapped__.rollback()
 
 
