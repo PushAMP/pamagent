@@ -1,12 +1,12 @@
 import wrapt
 
-from pamagent.trace import register_database_client, DatabaseTrace
-from pamagent.wrapper import FuncWrapper, callable_name, wrap_object
-from pamagent.transaction_cache import current_transaction
-
 from pamagent.hooks._dbapi2 import (CursorWrapper as
                                     DBAPI2CursorWrapper, ConnectionWrapper as DBAPI2ConnectionWrapper,
                                     ConnectionFactory as DBAPI2ConnectionFactory)
+from pamagent.trace import register_database_client, DatabaseTrace
+from pamagent.transaction_cache import current_transaction
+from pamagent.wrapper import FuncWrapper, callable_name, wrap_object
+
 
 DEFAULT = object()
 
