@@ -8,7 +8,6 @@ sudo: false
 group: deprecated-2017Q4
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y tree
 install:
 - python -c "import sysconfig; print('\n'.join(map(repr,sorted(sysconfig.get_config_vars().items()))))"
 - mkdir ~/rust-installer
@@ -23,7 +22,6 @@ install:
 - pip install pytest django requests setuptools-rust==0.8.2 sphinx sphinx_rtd_theme travis-sphinx
 script:
 - python setup.py develop
-- tree
 - pytest
 - travis-sphinx build
 after_success:
