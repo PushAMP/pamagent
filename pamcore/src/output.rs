@@ -62,7 +62,6 @@ impl Output for PamCollectorOutput {
             let status_w: Result<usize, Error> = stream.write(self.token.as_bytes());
             let status: usize = match status_w {
                 Ok(_v) => {
-                    println!("OK");
                     let mut buffer: [u8; 10] = [0; 10];
                     match stream.read(&mut buffer) {
                         Ok(v) => match v {

@@ -261,13 +261,9 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     fn activate_py(token: &str, addr: &str) -> PyResult<bool> {
         let output_transport: PamCollectorOutput =
             PamCollectorOutput::new(token.to_owned(), addr.to_owned());
-        println!("121");
         thread::spawn(move || {
-            println!("131");
             output_transport.start();
-            println!("141");
         });
-        println!("151");
         Ok(true)
     }
 
