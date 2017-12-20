@@ -1,19 +1,20 @@
 //#![crate_type = "dylib"]
 #![feature(proc_macro, specialization)]
+#![feature(refcell_replace_swap)]
 extern crate pyo3;
 use pyo3::prelude::*;
-extern crate serde_json;
-#[macro_use]
-extern crate serde_derive;
 #[macro_use]
 extern crate lazy_static;
 extern crate rand;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
 extern crate url;
-
+use std::thread;
 
 mod core;
 mod output;
-use core::{TransactionCache, StackNode, FuncNode, ExternalNode, DatabaseNode};
+use core::{DatabaseNode, ExternalNode, FuncNode, StackNode, TransactionCache};
 use url::Url;
 use self::output::Output;
 use self::output::PamCollectorOutput;
@@ -21,7 +22,6 @@ use self::output::PamCollectorOutput;
 /// This module is implemented in Rust.
 #[py::modinit(pamagent_core)]
 fn init(py: Python, m: &PyModule) -> PyResult<()> {
-
     /// Set transaction
     ///
     /// :param int id: Transaction ID. ThreadID as usual.
@@ -31,12 +31,11 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     /// :rtype: bool
     ///
     #[pyfn(m, "set_transaction")]
-    fn set_transaction_py(id:u64, transaction:String, path:Option<String>) -> PyResult<bool> {
-       Ok(core::TRANSACTION_CACHE.write().unwrap().set_transaction(
-        id,
-        transaction,
-        path,
-    ))
+    fn set_transaction_py(id: u64, transaction: String, path: Option<String>) -> PyResult<bool> {
+        Ok(core::TRANSACTION_CACHE
+            .write()
+            .unwrap()
+            .set_transaction(id, transaction, path))
     }
 
     /// Get transaction by id
@@ -47,12 +46,10 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     ///
     #[pyfn(m, "get_transaction")]
     fn get_transaction_py(id: u64) -> PyResult<Option<u64>> {
-        Ok(
-            core::TRANSACTION_CACHE
-                .read()
-                .unwrap()
-                .availability_transaction(id),
-        )
+        Ok(core::TRANSACTION_CACHE
+            .read()
+            .unwrap()
+            .availability_transaction(id))
     }
 
     /// Get transaction start time
@@ -64,12 +61,10 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     ///
     #[pyfn(m, "get_transaction_start_time")]
     fn get_transaction_start_time_py(id: u64) -> PyResult<f64> {
-        Ok(
-            core::TRANSACTION_CACHE
-                .read()
-                .unwrap()
-                .get_transaction_start_time(id),
-        )
+        Ok(core::TRANSACTION_CACHE
+            .read()
+            .unwrap()
+            .get_transaction_start_time(id))
     }
 
     /// Get transaction end time
@@ -81,12 +76,10 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     ///
     #[pyfn(m, "get_transaction_end_time")]
     fn get_transaction_end_time_py(id: u64) -> PyResult<f64> {
-        Ok(
-            core::TRANSACTION_CACHE
-                .read()
-                .unwrap()
-                .get_transaction_end_time(id),
-        )
+        Ok(core::TRANSACTION_CACHE
+            .read()
+            .unwrap()
+            .get_transaction_end_time(id))
     }
 
     /// Push trace node to current transaction
@@ -100,16 +93,19 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     /// :rtype: bool
     ///
     #[pyfn(m, "push_current")]
-    fn push_current_py(id: u64, node_id: u64, start_time: f64, func_name: Option<String>, ) -> PyResult<bool> {
+    fn push_current_py(
+        id: u64,
+        node_id: u64,
+        start_time: f64,
+        func_name: Option<String>,
+    ) -> PyResult<bool> {
         Ok(core::TRANSACTION_CACHE.write().unwrap().push_current(
             id,
-            StackNode::Func(
-                FuncNode::new(
-                    node_id,
-                    start_time,
-                    func_name.unwrap_or_else(|| "unknow".to_string()),
-                ),
-            ),
+            StackNode::Func(FuncNode::new(
+                node_id,
+                start_time,
+                func_name.unwrap_or_else(|| "unknow".to_string()),
+            )),
         ))
     }
 
@@ -125,7 +121,14 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     /// :rtype: bool
     ///
     #[pyfn(m, "push_current_external")]
-    fn push_current_external_py(id: u64, node_id: u64, start_time: f64, url: &str, library: String, method: String) -> PyResult<bool> {
+    fn push_current_external_py(
+        id: u64,
+        node_id: u64,
+        start_time: f64,
+        url: &str,
+        library: String,
+        method: String,
+    ) -> PyResult<bool> {
         let parse_url = Url::parse(url).unwrap();
         let host = Some(parse_url.host_str().unwrap_or("undef").to_string());
         let port = parse_url.port();
@@ -158,21 +161,33 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     /// :param str sql: Obfuscated sql
     ///
     #[pyfn(m, "push_current_database")]
-    fn push_current_database_py(id: u64, node_id: u64, start_time: f64,
-                                database_product: String,
-                                database_name: String,
-                                host: Option<String>,
-                                port: Option<u16>,
-                                operation: String,
-                                target: String,
-                                sql: String) -> PyResult<bool> {
+    fn push_current_database_py(
+        id: u64,
+        node_id: u64,
+        start_time: f64,
+        database_product: String,
+        database_name: String,
+        host: Option<String>,
+        port: Option<u16>,
+        operation: String,
+        target: String,
+        sql: String,
+    ) -> PyResult<bool> {
         let host: String = host.unwrap_or("".to_string());
         let port: u16 = port.unwrap_or(0);
         Ok(core::TRANSACTION_CACHE.write().unwrap().push_current(
             id,
             StackNode::Database(DatabaseNode::new(
-                node_id, start_time,host, port,database_product, database_name, operation, target,
-                sql)),
+                node_id,
+                start_time,
+                host,
+                port,
+                database_product,
+                database_name,
+                operation,
+                target,
+                sql,
+            )),
         ))
     }
 
@@ -186,12 +201,11 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     ///
     #[pyfn(m, "pop_current")]
     fn pop_current_py(id: u64, node_id: u64, end_time: f64) -> PyResult<Option<u64>> {
-        Ok(core::TRANSACTION_CACHE.write().unwrap().pop_current(
-            id,
-            node_id,
-            end_time,
-        ))
-}
+        Ok(core::TRANSACTION_CACHE
+            .write()
+            .unwrap()
+            .pop_current(id, node_id, end_time))
+    }
 
     /// Drop transaction from transaction cache
     ///
@@ -201,9 +215,10 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     ///
     #[pyfn(m, "drop_transaction")]
     fn drop_transaction_py(id: u64) -> PyResult<bool> {
-        Ok(core::TRANSACTION_CACHE.write().unwrap().drop_transaction(
-            id,
-        ))
+        Ok(core::TRANSACTION_CACHE
+            .write()
+            .unwrap()
+            .drop_transaction(id))
     }
 
     /// Set transaction path
@@ -215,12 +230,10 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     ///
     #[pyfn(m, "set_transaction_path")]
     fn set_transaction_path_py(id: u64, path: String) -> PyResult<bool> {
-        Ok(
-            core::TRANSACTION_CACHE
-                .write()
-                .unwrap()
-                .set_transaction_path(id, path),
-        )
+        Ok(core::TRANSACTION_CACHE
+            .write()
+            .unwrap()
+            .set_transaction_path(id, path))
     }
 
     /// Dump transaction into JSON string
@@ -231,9 +244,10 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     ///
     #[pyfn(m, "dump_transaction")]
     fn dump_transaction_py(id: u64) -> PyResult<String> {
-        Ok(core::TRANSACTION_CACHE.write().unwrap().dump_transaction(
-            id,
-        ))
+        Ok(core::TRANSACTION_CACHE
+            .write()
+            .unwrap()
+            .dump_transaction(id))
     }
 
     /// Activate output transport to PAMCollector
@@ -245,8 +259,11 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     ///
     #[pyfn(m, "activate")]
     fn activate_py(token: &str, addr: &str) -> PyResult<bool> {
-        let output_transport: PamCollectorOutput = PamCollectorOutput::new(token.to_owned(), addr.to_owned());
-        output_transport.start();
+        let output_transport: PamCollectorOutput =
+            PamCollectorOutput::new(token.to_owned(), addr.to_owned());
+        thread::spawn(move || {
+            output_transport.start();
+        });
         Ok(true)
     }
 

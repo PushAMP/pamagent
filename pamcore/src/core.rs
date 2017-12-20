@@ -71,7 +71,7 @@ impl StackNode {
             StackNode::External(ref mut x) => {
                 x.exclusive -= node.get_duration();
                 x.childrens.push(node);
-            },
+            }
             StackNode::Database(ref mut x) => {
                 x.exclusive -= node.get_duration();
                 x.childrens.push(node);
@@ -184,7 +184,6 @@ impl ExternalNode {
     }
 }
 
-
 #[derive(Debug, Serialize)]
 pub struct DatabaseNode {
     node_id: u64,
@@ -213,7 +212,7 @@ impl DatabaseNode {
         database_name: String,
         operation: String,
         target: String,
-        sql: String
+        sql: String,
     ) -> DatabaseNode {
         DatabaseNode {
             node_id: node_id,
@@ -251,7 +250,6 @@ impl DatabaseNode {
     }
 }
 
-
 #[derive(Debug, Serialize)]
 struct TransactionNode {
     base_name: String,
@@ -260,7 +258,6 @@ struct TransactionNode {
     guid: String,
     path: String,
 }
-
 
 impl TransactionNode {
     fn set_path(&mut self, path: String) {
@@ -389,7 +386,6 @@ impl<'b> TransactionCache for TrMap {
             let t: u64 = parent_node.get_node_id();
             return Some(t);
         };
-
 
         None
     }
