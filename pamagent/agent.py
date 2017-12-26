@@ -1,4 +1,4 @@
-from pamagent.hooks import requests_hook, django_hook, sqlite_hook
+from pamagent.hooks import requests_hook, django_hook, sqlite_hook, psycopg2_hook
 from pamagent import pamagent_core
 
 
@@ -6,6 +6,7 @@ def _init_builtin() -> None:
         requests_hook.patch()
         django_hook.patch()
         sqlite_hook.patch()
+        psycopg2_hook.patch()
 
 
 def init(token: str, collector_host: str="pamcollector.pushamp.com")->None:

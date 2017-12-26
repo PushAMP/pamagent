@@ -99,7 +99,7 @@ class DatabaseTrace(TimeTrace):
         self.execute_params = execute_params
         self.host = host
         self.port = port
-        self.database_name = database_name
+        self.database_name = database_name or connect_params[1].get('database')
         self._sql_statement = sql_statement(self.sql, self.dbapi2_module)
 
     def _operation(self):
