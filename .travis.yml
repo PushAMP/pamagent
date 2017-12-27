@@ -4,11 +4,17 @@ python:
 - '3.6'
 env:
 - RUST_VERSION=nightly
+services:
+  - postgresql
 sudo: required
 dist: trusty
 group: deprecated-2017Q4
 before_install:
   - sudo apt-get -qq update
+before_script:
+  - psql -c "CREATE USER test WITH PASSWORD 'test';" -U postgres
+  - psql -c "CREATE DATABASE test_db with  OWNER test" -U postgres
+  - psql -c "CREATE TABLE stocks (date TEXT, trans TEXT, symbol TEXT, qty REAL, price REAL)" -U test test_db
 install:
 - python -c "import sysconfig; print('\n'.join(map(repr,sorted(sysconfig.get_config_vars().items()))))"
 - mkdir ~/rust-installer

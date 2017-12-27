@@ -77,6 +77,12 @@ def test_sqlite_hooks():
     os.remove('example.db')
 
 
+from pytest_postgresql import factories
+
+# c = postgresql_my.cursor()
+postgresql_proc2 = factories.postgresql_proc(port=9876)
+postgresql2 = factories.postgresql('postgresql_proc2')
+
 def test_psycopg2_hooks():
     init(token="qwerty")
     import psycopg2
@@ -84,7 +90,7 @@ def test_psycopg2_hooks():
     tr = Transaction(enabled=True)
     tr.set_transaction_path("/yt")
     with tr:
-        conn = psycopg2.connect(database="test", user="d.zhiltsov", password="secret")
+        conn = psycopg2.connect(database="test_db", user="test", password="test")
 
         c = conn.cursor()
         # c.execute('''CREATE TABLE stocks
