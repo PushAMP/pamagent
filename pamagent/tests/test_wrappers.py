@@ -77,12 +77,6 @@ def test_sqlite_hooks():
     os.remove('example.db')
 
 
-from pytest_postgresql import factories
-
-# c = postgresql_my.cursor()
-postgresql_proc2 = factories.postgresql_proc(port=9876)
-postgresql2 = factories.postgresql('postgresql_proc2')
-
 def test_psycopg2_hooks():
     init(token="qwerty")
     import psycopg2
