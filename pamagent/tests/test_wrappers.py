@@ -84,7 +84,7 @@ def test_psycopg2_hooks():
     tr = Transaction(enabled=True)
     tr.set_transaction_path("/yt")
     with tr:
-        conn = psycopg2.connect(database="test_db", user="test", password="test")
+        conn = psycopg2.connect(database="test_db", user="test", password="test", host="127.0.0.1")
 
         c = conn.cursor()
         # c.execute('''CREATE TABLE stocks
