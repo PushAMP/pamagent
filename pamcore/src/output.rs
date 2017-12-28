@@ -21,7 +21,7 @@ fn get_connection(addr: &str) -> Option<TcpStream> {
     match stream {
         Ok(s) => Some(s),
         Err(e) => {
-//            println!("Error connect {:?}", e);
+            //            println!("Error connect {:?}", e);
             None
         }
     }

@@ -85,11 +85,7 @@ def test_psycopg2_hooks():
     tr.set_transaction_path("/yt")
     with tr:
         conn = psycopg2.connect(database="test_db", user="test", password="test", host="127.0.0.1")
-
         c = conn.cursor()
-        # c.execute('''CREATE TABLE stocks
-        #              (date TEXT, trans TEXT, symbol TEXT, qty REAL, price REAL)''')
-
         c.execute("INSERT INTO stocks VALUES ('2006-01-05','BUY','RHAT',100,35.14)")
         conn.commit()
         c.execute("SELECT * FROM stocks WHERE symbol='RHAT'")
