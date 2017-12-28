@@ -214,6 +214,20 @@ impl DatabaseNode {
         target: String,
         sql: String,
     ) -> DatabaseNode {
+        let mut default_host: &str = "";
+        let mut default_port: u16 = 0;
+        if database_product == "PostgreSQL" {
+            default_host = "127.0.0.1";
+            default_port = 5432;
+        };
+        let target_host = match host.as_ref() {
+            "" => default_host.to_string(),
+            _ => host,
+        };
+        let target_port = match port {
+            0 => default_port,
+            _ => port,
+        };
         DatabaseNode {
             node_id: node_id,
             childrens: vec![],
@@ -222,8 +236,8 @@ impl DatabaseNode {
             exclusive: DEFAULT_TIME_VAL,
             node_count: 0,
             duration: DEFAULT_TIME_VAL,
-            host: host.to_string(),
-            port: port,
+            host: target_host.to_string(),
+            port: target_port,
             database_name: database_name.to_string(),
             database_product: database_product.to_string(),
             operation: operation.to_string(),

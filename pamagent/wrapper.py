@@ -69,6 +69,10 @@ def wrap_object(target_module, name, factory, *args, **kwargs):
     return wrapper
 
 
+def wrap_function_wrapper(module, name, wrapper):
+    return wrap_object(module, name, FunctionWrapper, (wrapper,))
+
+
 def _module_name(obj):
     module_name = None
     if hasattr(obj, '__objclass__'):

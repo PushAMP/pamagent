@@ -47,6 +47,7 @@ setup(
     packages=['pamagent', 'pamagent.hooks'],
     install_requires=[
         "wrapt==1.10.10",
+        "urllib3==1.22",
     ],
     zip_safe=False,
     include_package_data=True,

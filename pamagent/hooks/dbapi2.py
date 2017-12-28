@@ -17,11 +17,14 @@ class CursorWrapper(_WrapperBase):
         transaction = current_transaction()
         if parameters is not DEFAULT:
             with DatabaseTrace(transaction, sql, self._pam_dbapi2_module, self._pam_connect_params,
-                               self._pam_cursor_params, parameters, (args, kwargs)):
+                               self._pam_cursor_params, sql_parameters=parameters,
+                               host=self._pam_connect_params[1].get('host'),
+                               port=self._pam_connect_params[1].get('port')):
                 return self.__wrapped__.execute(sql, parameters, *args, **kwargs)
         else:
             with DatabaseTrace(transaction, sql, self._pam_dbapi2_module, self._pam_connect_params,
-                               self._pam_cursor_params, None, (args, kwargs)):
+                               self._pam_cursor_params, host=self._pam_connect_params[1].get('host'),
+                               port=self._pam_connect_params[1].get('port')):
                 return self.__wrapped__.execute(sql, **kwargs)
 
     def executemany(self, sql, seq_of_parameters):
@@ -63,13 +66,15 @@ class ConnectionWrapper(_WrapperBase):
     def commit(self):
         transaction = current_transaction()
         with DatabaseTrace(transaction, 'COMMIT', self._pam_dbapi2_module,
-                           database_name=self._pam_connect_params[0][0]):
+                           database_name=self._pam_connect_params[1]['database'],
+                           host=self._pam_connect_params[1].get('host'), port=self._pam_connect_params[1].get('port')):
             return self.__wrapped__.commit()
 
     def rollback(self):
         transaction = current_transaction()
         with DatabaseTrace(transaction, 'ROLLBACK', self._pam_dbapi2_module, self._pam_connect_params,
-                           database_name=self._pam_connect_params[0][0]):
+                           database_name=self._pam_connect_params[1]['database'],
+                           host=self._pam_connect_params[1].get('host'), port=self._pam_connect_params[1].get('port')):
             return self.__wrapped__.rollback()
 
 

@@ -21,7 +21,7 @@ fn get_connection(addr: &str) -> Option<TcpStream> {
     match stream {
         Ok(s) => Some(s),
         Err(e) => {
-            println!("Error connect {:?}", e);
+            //            println!("Error connect {:?}", e);
             None
         }
     }
@@ -131,7 +131,7 @@ impl Output for PamCollectorOutput {
                             }
                         }
                         None => {
-                            thread::sleep(Duration::from_millis(40));
+                            thread::sleep(Duration::from_millis(400));
                             ()
                         }
                     }
