@@ -96,4 +96,3 @@ def test_psycopg2_hooks():
         print(c.fetchone())
         conn.close()
         print(tr.dump())
-    # os.remove('example.db')
