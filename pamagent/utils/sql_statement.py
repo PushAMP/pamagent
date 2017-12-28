@@ -10,17 +10,29 @@ _int_re = re.compile(r'(?<!:)\b\d+\b')
 
 _single_quotes_p = "'(?:[^']|'')*'"
 _single_quotes_re = re.compile(_single_quotes_p)
+_double_quotes_p = '"(?:[^"]|"")*"'
+_double_quotes_re = re.compile(_double_quotes_p)
+_any_quotes_p = _single_quotes_p + '|' + _double_quotes_p
+_any_quotes_re = re.compile(_any_quotes_p)
 
 _uncomment_sql_p = r'/\*.*?\*/'
 _uncomment_sql_re = re.compile(_uncomment_sql_p, re.DOTALL)
+
+
+_quotes_table = {
+    'single': _single_quotes_re,
+    'double': _double_quotes_re,
+    'single+double': _any_quotes_re,
+}
 
 
 def _uncomment_sql(sql):
     return _uncomment_sql_re.sub('', sql)
 
 
-def _obfuscate_sql(sql):
-    sql = _single_quotes_re.sub('?', sql)
+def _obfuscate_sql(sql, quoting_style):
+    quotes_re = _quotes_table.get(quoting_style, _single_quotes_re)
+    sql = quotes_re.sub('?', sql)
     sql = _int_re.sub('?', sql)
     return sql
 
@@ -115,11 +127,11 @@ def _parse_target(sql, operation):
 
 
 class SQLStatement(object):
-    __slots__ = ['sql', 'database', '_operation', '_uncommented', '_obfuscated', '__weakref__', '_target']
+    __slots__ = ['sql', 'quoting_style', '_operation', '_uncommented', '_obfuscated', '__weakref__', '_target']
 
-    def __init__(self, sql, database=None):
+    def __init__(self, sql, quoting_style=None):
         self.sql = sql
-        self.database = database
+        self.quoting_style = quoting_style
         self._operation = None
         self._target = None
         self._uncommented = None
@@ -134,7 +146,7 @@ class SQLStatement(object):
     @property
     def obfuscated(self):
         if self._obfuscated is None:
-            self._obfuscated = _obfuscate_sql(self.uncommented)
+            self._obfuscated = _obfuscate_sql(self.uncommented, self.quoting_style)
         return self._obfuscated
 
     @property
@@ -157,6 +169,6 @@ def sql_statement(sql, dbapi2_module):
     if result is not None:
         return result
 
-    result = SQLStatement(sql, None)
+    result = SQLStatement(sql, getattr(dbapi2_module, "_pam_quoting_style", None))
     _sql_statements[key] = result
     return result
