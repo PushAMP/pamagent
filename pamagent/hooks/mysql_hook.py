@@ -15,7 +15,7 @@ class ConnectionWrapper(DBAPI2ConnectionWrapper):
             cursor = self.__wrapped__.__enter__()
         return self.__cursor_wrapper__(cursor, self._pam_dbapi2_module, self._pam_connect_params, None)
 
-    def __exit__(self, exc, value, tb):
+    def __exit__(self, exc, value, tb, *args, **kwargs):
         transaction = current_transaction()
         name = callable_name(self.__wrapped__.__exit__)
         with FuncWrapper(transaction, name):
