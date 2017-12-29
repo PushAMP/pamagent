@@ -6,6 +6,7 @@ env:
 - RUST_VERSION=nightly
 services:
   - postgresql
+  - mysql
 sudo: required
 dist: trusty
 group: deprecated-2017Q4
@@ -15,6 +16,10 @@ before_script:
   - psql -c "CREATE USER test WITH PASSWORD 'test';" -U postgres
   - psql -c "CREATE DATABASE test_db with  OWNER test" -U postgres
   - psql -c "CREATE TABLE stocks (date TEXT, trans TEXT, symbol TEXT, qty REAL, price REAL)" -U test test_db
+  - mysql -e "CREATE DATABASE test_db;"
+  - mysql -e "CREATE USER 'test'@'%' IDENTIFIED BY 'test';"
+  - mysql -e "CREATE TABLE stocks (date TEXT, trans TEXT, symbol TEXT, qty REAL, price REAL);" -D test_db
+  - mysql -e "GRANT ALL ON test_db.* TO 'test'@'%';"
 install:
 - python -c "import sysconfig; print('\n'.join(map(repr,sorted(sysconfig.get_config_vars().items()))))"
 - mkdir ~/rust-installer
@@ -25,7 +30,7 @@ install:
 - export LIBRARY_PATH="$LIBRARY_PATH:$PYTHON_LIB"
 - export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PYTHON_LIB:$HOME/rust/lib"
 - rustc -V
-- pip install pytest django requests setuptools-rust==0.8.2 sphinx sphinx_rtd_theme travis-sphinx psycopg2
+- pip install pytest django requests setuptools-rust==0.8.2 sphinx sphinx_rtd_theme travis-sphinx psycopg2 mysql-connector-python
 script:
 - python setup.py develop
 - pytest

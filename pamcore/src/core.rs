@@ -219,6 +219,10 @@ impl DatabaseNode {
         if database_product == "PostgreSQL" {
             default_host = "127.0.0.1";
             default_port = 5432;
+        }
+        else if database_product == "MySQL" {
+            default_host = "127.0.0.1";
+            default_port = 3306;
         };
         let target_host = match host.as_ref() {
             "" => default_host.to_string(),
