@@ -76,38 +76,7 @@ class Transaction(object):
         except Exception:
             _logger.exception('Fail to drop transaction.')
             raise
-
-        # if not self.stopped:
-        #     self.end_time = time.time()
-        # duration = self.end_time - self.start_time
-        # if not self._cpu_user_time_end:
-        #     self._cpu_user_time_end = os.times()[0]
-        #
-        # if duration and self._cpu_user_time_end:
-        #     self._cpu_user_time_value = (self._cpu_user_time_end - self._cpu_user_time_start)
-        #
-        # response_time = duration
-        # root = self._node_stack.pop()
-        #
-        # children = root.children
-        # exclusive = duration + root.exclusive
-        # self.total_time = duration
-        # node = TransactionNode(
-        #     base_name=self._name,
-        #     start_time=self.start_time,
-        #     end_time=self.end_time,
-        #     total_time=self.total_time,
-        #     duration=duration,
-        #     exclusive=exclusive,
-        #     children=tuple(children),
-        #     guid=self.guid,
-        #     cpu_time=self._cpu_user_time_value,
-        #     response_time=response_time,
-        #     path=self.path,
-        # )
-
         self.enabled = False
-        # print(node)
 
     @property
     def state(self):
