@@ -18,6 +18,7 @@ before_script:
   - psql -c "CREATE TABLE stocks (date TEXT, trans TEXT, symbol TEXT, qty REAL, price REAL)" -U test test_db
   - mysql -e "CREATE DATABASE test_db;"
   - mysql -e "CREATE USER 'test'@'%' IDENTIFIED BY 'test';"
+  - mysql -e "CREATE TABLE stocks (date TEXT, trans TEXT, symbol TEXT, qty REAL, price REAL);" -D test_db
   - mysql -e "GRANT ALL ON test_db.* TO 'test'@'%';"
 install:
 - python -c "import sysconfig; print('\n'.join(map(repr,sorted(sysconfig.get_config_vars().items()))))"
