@@ -266,6 +266,5 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
         });
         Ok(true)
     }
-
     Ok(())
 }

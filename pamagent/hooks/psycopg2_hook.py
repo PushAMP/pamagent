@@ -1,5 +1,4 @@
-from urllib.parse import parse_qsl, unquote
-import urllib3
+from urllib.parse import parse_qsl, unquote, urlparse
 
 import wrapt
 
@@ -47,7 +46,7 @@ def _parse_connect_params(args, kwargs):
 
     try:
         if dsn and (dsn.startswith('postgres://') or dsn.startswith('postgresql://')):
-            parsed_uri = urllib3.util.parse_url(dsn)
+            parsed_uri = urlparse(dsn)
 
             host = parsed_uri.hostname or None
             host = host and unquote(host)
