@@ -44,7 +44,7 @@ setup(
     },
     platforms='Posix; MacOS X; Windows',
     rust_extensions=[RustExtension('pamagent.pamagent_core', 'pamcore/Cargo.toml', binding=Binding.PyO3)],
-    packages=['pamagent', 'pamagent.hooks'],
+    packages=['pamagent', 'pamagent.hooks', 'pamagent.utils'],
     install_requires=[
         "wrapt==1.10.10",
     ],

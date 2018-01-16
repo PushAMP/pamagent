@@ -120,7 +120,7 @@ class DatabaseTrace(TimeTrace):
             return self
         pamagent_core.push_current_database(self.transaction, id(self), time.time(),
                                             self.dbapi2_module[0]._pam_database_product, self.database_name, self.host,
-                                            self.port, self._operation(), self._target(), self._obfuse())
+                                            int(self.port), self._operation(), self._target(), self._obfuse())
         self.activated = True
         return self
 
