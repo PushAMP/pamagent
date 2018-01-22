@@ -3,6 +3,7 @@
 #![feature(refcell_replace_swap)]
 extern crate pyo3;
 use pyo3::prelude::*;
+extern crate backoff;
 #[macro_use]
 extern crate lazy_static;
 extern crate rand;
