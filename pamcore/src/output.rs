@@ -8,6 +8,10 @@ use std::thread;
 
 use std::cell::RefCell;
 use std::rc::Rc;
+use backoff::{ExponentialBackoff, Operation};
+use std::fmt::Display;
+use std::io;
+use backoff;
 
 lazy_static! {
     pub static ref OUTPUT_QUEUE:Arc<Mutex<VecDeque<String>>> = {
@@ -16,15 +20,10 @@ lazy_static! {
     };
 }
 
-fn get_connection(addr: &str) -> Option<TcpStream> {
+fn get_connection(addr: &str) -> Result<TcpStream, Error> {
+    println!("Connect!!!");
     let stream: Result<TcpStream, Error> = TcpStream::connect(addr);
-    match stream {
-        Ok(s) => Some(s),
-        Err(e) => {
-            //            println!("Error connect {:?}", e);
-            None
-        }
-    }
+    stream
 }
 #[derive(Clone)]
 pub struct PamCollectorOutput {
@@ -34,7 +33,7 @@ pub struct PamCollectorOutput {
 
 pub trait Output {
     fn start(&self);
-    fn recreate_stream(&self) -> TcpStream;
+    fn recreate_stream(&self) -> Result<TcpStream, backoff::Error<io::Error>>;
     fn consume_events(&self, shared_stream: Rc<RefCell<TcpStream>>);
 }
 
@@ -44,65 +43,70 @@ impl PamCollectorOutput {
     }
 }
 
+fn new_io_err<E: Display>(err: E) -> io::Error {
+    io::Error::new(io::ErrorKind::Other, err.to_string())
+}
+
 impl Output for PamCollectorOutput {
     fn start(&self) {
-        let shared_stream: Rc<RefCell<TcpStream>> = Rc::new(RefCell::new(self.recreate_stream()));
-        self.consume_events(shared_stream);
+        println!("IN Start Func");
+        match self.recreate_stream() {
+            Ok(v) => {
+                let shared_stream: Rc<RefCell<TcpStream>> = Rc::new(RefCell::new(v));
+                self.consume_events(shared_stream);
+            }
+            Err(e) => println!("Error: {}", e),
+        };
     }
 
-    fn recreate_stream(&self) -> TcpStream {
-        let mut tmp_stream: Option<TcpStream> = None;
-        let mut reconnect_status: bool = false;
-        while !reconnect_status {
-            let stream_opt: Option<TcpStream> = get_connection(&self.addr);
-            let mut stream: TcpStream = match stream_opt {
-                Some(stream) => stream,
-                None => continue,
-            };
+    fn recreate_stream(&self) -> Result<TcpStream, backoff::Error<io::Error>> {
+        let mut backoff = ExponentialBackoff::default();
+        let mut op = || {
+            let mut stream: TcpStream = get_connection(&self.addr).map_err(new_io_err)?;
             let status_w: Result<usize, Error> = stream.write(self.token.as_bytes());
-            let status: usize = match status_w {
-                Ok(_v) => {
-                    let mut buffer: [u8; 10] = [0; 10];
-                    match stream.read(&mut buffer) {
-                        Ok(v) => match v {
-                            0 => {
-                                println!("Token invalid. Connection Close");
-                                0
-                            }
-                            _ => {
-                                println!("Token Valid");
-                                1
-                            }
-                        },
-                        Err(e) => {
-                            println!("Error while read handshake byte {}", e);
-                            0
-                        }
+            println!("{:?}", status_w);
+            status_w.map_err(new_io_err)?;
+            let mut buffer: [u8; 10] = [0; 10];
+            let stat = stream.read(&mut buffer).map_err(new_io_err)?;
+            fn check_stat(stat: usize) -> Result<(), io::Error> {
+                match stat {
+                    0 => {
+                        println!("Token invalid. Connection Close");
+                        Err(Error::new(
+                            io::ErrorKind::Other,
+                            "Token invalid. Connection Close",
+                        ))
+                    }
+                    _ => {
+                        println!("Token Valid");
+                        Ok(())
                     }
                 }
-                Err(e) => {
-                    println!("Error while write handshakebytes {}", e);
-                    0
-                }
             };
-            match status {
-                0 => continue,
-                _ => {
-                    tmp_stream = Some(stream);
-                    reconnect_status = true;
-                }
-            };
-        }
-        tmp_stream.unwrap()
+            check_stat(stat)
+                .map_err(new_io_err)
+                .map_err(backoff::Error::Permanent)?;
+            Ok(stream)
+        };
+        op.retry(&mut backoff)
     }
 
     fn consume_events(&self, shared_stream: Rc<RefCell<TcpStream>>) {
         println!("Output loop started");
         let mut need_recreate: bool = false;
+        let mut new_stream;
         loop {
             if need_recreate {
+                println!("need recreate");
                 thread::sleep(Duration::from_secs(10));
-                let new_stream: TcpStream = self.recreate_stream();
+                match self.recreate_stream() {
+                    Ok(v) => new_stream = v,
+                    Err(e) => {
+                        println!("Error: {}", e);
+                        need_recreate = true;
+                        continue;
+                    }
+                };
                 shared_stream.replace(new_stream);
                 need_recreate = false;
             }
