@@ -4,17 +4,23 @@
 extern crate pyo3;
 use pyo3::prelude::*;
 extern crate backoff;
+extern crate chrono;
+extern crate fern;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate log;
 extern crate rand;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
 extern crate url;
+
 use std::thread;
 
 mod core;
 mod output;
+mod logging;
 use core::{DatabaseNode, ExternalNode, FuncNode, StackNode, TransactionCache};
 use url::Url;
 use self::output::Output;
@@ -23,6 +29,8 @@ use self::output::PamCollectorOutput;
 /// This module is implemented in Rust.
 #[py::modinit(pamagent_core)]
 fn init(py: Python, m: &PyModule) -> PyResult<()> {
+    logging::configure_logging();
+
     /// Set transaction
     ///
     /// :param int id: Transaction ID. ThreadID as usual.
