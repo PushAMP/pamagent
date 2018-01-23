@@ -47,15 +47,6 @@ def instrument_mysql(module):
         wrap_object(module, 'Connect', ConnectionFactory, (module,))
 
 
-def instrument_mysqldb(module):
-    register_database_client(module, database_product='MySQL', quoting_style='single+double',
-                             instance_info=_instance_info)
-
-    wrap_object(module, 'connect', ConnectionFactory, (module,))
-    if hasattr(module, 'Connect'):
-        wrap_object(module, 'Connect', ConnectionFactory, (module,))
-
-
 def patch():
-    wrapt.register_post_import_hook(instrument_mysql, 'mysql.connector')
-    wrapt.register_post_import_hook(instrument_mysql, 'MySQLdb')
+    for module in ['mysql.connector', 'MySQLdb']:
+        wrapt.register_post_import_hook(instrument_mysql, module)
