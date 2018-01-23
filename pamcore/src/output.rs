@@ -21,7 +21,7 @@ lazy_static! {
 }
 
 fn get_connection(addr: &str) -> Result<TcpStream, Error> {
-    println!("Connect!!!");
+    info!("Try to connect to remote server.");
     let stream: Result<TcpStream, Error> = TcpStream::connect(addr);
     stream
 }
@@ -49,13 +49,13 @@ fn new_io_err<E: Display>(err: E) -> io::Error {
 
 impl Output for PamCollectorOutput {
     fn start(&self) {
-        println!("IN Start Func");
+        trace!("Handle PamCollectorOutput::start");
         match self.recreate_stream() {
             Ok(v) => {
                 let shared_stream: Rc<RefCell<TcpStream>> = Rc::new(RefCell::new(v));
                 self.consume_events(shared_stream);
             }
-            Err(e) => println!("Error: {}", e),
+            Err(e) => warn!("Error while creating TCP Stream. Error: {}", e),
         };
     }
 
@@ -64,21 +64,21 @@ impl Output for PamCollectorOutput {
         let mut op = || {
             let mut stream: TcpStream = get_connection(&self.addr).map_err(new_io_err)?;
             let status_w: Result<usize, Error> = stream.write(self.token.as_bytes());
-            println!("{:?}", status_w);
+            trace!("Write token payload to server. Write bytes: {:?}", status_w);
             status_w.map_err(new_io_err)?;
             let mut buffer: [u8; 10] = [0; 10];
             let stat = stream.read(&mut buffer).map_err(new_io_err)?;
             fn check_stat(stat: usize) -> Result<(), io::Error> {
                 match stat {
                     0 => {
-                        println!("Token invalid. Connection Close");
+                        warn!("Token invalid. Connection Close");
                         Err(Error::new(
                             io::ErrorKind::Other,
                             "Token invalid. Connection Close",
                         ))
                     }
                     _ => {
-                        println!("Token Valid");
+                        info!("Token Valid");
                         Ok(())
                     }
                 }
@@ -92,17 +92,17 @@ impl Output for PamCollectorOutput {
     }
 
     fn consume_events(&self, shared_stream: Rc<RefCell<TcpStream>>) {
-        println!("Output loop started");
+        info!("Consume event output loop started");
         let mut need_recreate: bool = false;
         let mut new_stream;
         loop {
             if need_recreate {
-                println!("need recreate");
+                trace!("TCP Stream need to recreate");
                 thread::sleep(Duration::from_secs(10));
                 match self.recreate_stream() {
                     Ok(v) => new_stream = v,
                     Err(e) => {
-                        println!("Error: {}", e);
+                        warn!("Error recreate stream. Error: {}", e);
                         need_recreate = true;
                         continue;
                     }
@@ -122,14 +122,14 @@ impl Output for PamCollectorOutput {
                                 Ok(v) => {
                                     match v {
                                         0 => {
-                                            println!("Server close connect");
+                                            warn!("Remote server close connect");
                                             need_recreate = true;
                                         }
-                                        _ => println!("OK"),
+                                        _ => trace!("Success write trace payload"),
                                     };
                                 }
                                 Err(e) => {
-                                    println!("Error while read payload response {}", e);
+                                    error!("Error while read payload response {}", e);
                                     need_recreate = true;
                                 }
                             }
@@ -141,7 +141,7 @@ impl Output for PamCollectorOutput {
                     }
                 }
                 Err(_) => {
-                    println!("Error create underlayng socket");
+                    error!("Error create underlayng socket");
                     need_recreate = true;
                 }
             };

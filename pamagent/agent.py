@@ -10,6 +10,6 @@ def _init_builtin() -> None:
         mysql_hook.patch()
 
 
-def init(token: str, collector_host: str="pamcollector.pushamp.com")->None:
+def init(token: str, collector_host: str="pamcollector.pushamp.com") -> None:
     _init_builtin()
     pamagent_core.activate(token, collector_host)
