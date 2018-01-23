@@ -27,6 +27,12 @@ use self::output::Output;
 use self::output::PamCollectorOutput;
 
 /// This module is implemented in Rust.
+///
+/// This module has the ability to configure the logging level
+/// To configure the logging, it is necessary to set the variable environment PAMAGENT_LEVEL_LOG
+/// with a value from 0 to 3 before the application starts, if the environment variable is not set
+/// to the default value of 0 (see pamcore/src/logging.rs for more information)
+///
 #[py::modinit(pamagent_core)]
 fn init(py: Python, m: &PyModule) -> PyResult<()> {
     logging::configure_logging();
@@ -158,6 +164,7 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
     }
 
     /// Push database trace node to current transaction
+    ///
     /// :param int id: Transaction ID. ThreadID as usual.
     /// :param int node_id: ID of TransactionNode. Object.__id__ as usual.
     /// :param float start_time: Timestamp when TransactionNode is activated

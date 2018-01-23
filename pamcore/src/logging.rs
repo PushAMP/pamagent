@@ -5,6 +5,8 @@ use chrono;
 use fern;
 use log;
 
+const DEBUG_LEVEL_KEY: &str = "PAMAGENT_LEVEL_LOG";
+
 fn setup_logging(verbosity: u8) -> Result<(), fern::InitError> {
     let mut base_config = fern::Dispatch::new();
 
@@ -23,7 +25,7 @@ fn setup_logging(verbosity: u8) -> Result<(), fern::InitError> {
         .format(|out, message, record| {
             out.finish(format_args!(
                 "[{}][{}][{}] {}",
-                chrono::Local::now().format("%H:%M"),
+                chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.f"),
                 record.target(),
                 record.level(),
                 message
@@ -38,13 +40,12 @@ fn setup_logging(verbosity: u8) -> Result<(), fern::InitError> {
 }
 
 pub fn configure_logging() {
-    let debug_level_key = "PAMAGENT_LEVEL_LOG";
-    let debug_level: u8 = env::var(debug_level_key)
+    let debug_level: u8 = env::var(DEBUG_LEVEL_KEY)
         .unwrap_or("0".to_string())
         .parse()
         .unwrap_or(0);
     match setup_logging(debug_level) {
         Ok(_) => info!(target:"overly-verbose-target", "Logger successfully configured."),
-        Err(e) => println!("Unable to configure logging. Error: {}", e),
+        Err(e) => error!("Unable to configure logging. Error: {}", e),
     };
 }
