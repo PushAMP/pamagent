@@ -16,3 +16,30 @@ Other OS
 --------
 1. Install *rust-nightly* via [rustup](https://www.rustup.rs)
 2. pip install --no-binary :all: pamagent
+
+
+Support technology
+------------------
+* Framaworks
+  * Django
+* Database(Drivers)
+  * mysql-connector-python
+  * mysqlclient
+  * psycopg2
+  * sqlite (builtin)
+* Library for external call
+  * requests
+
+TODO
+----
+* Tornado
+* AsyncIO
+* Asyncio-http
+* cx_oracle
+* urllib
+* redis
+* memcache
+* flask
+* twisted
+* Django Templates
+* Jinja2

@@ -48,4 +48,5 @@ def instrument_mysql(module):
 
 
 def patch():
-    wrapt.register_post_import_hook(instrument_mysql, 'mysql.connector')
+    for module in ['mysql.connector', 'MySQLdb']:
+        wrapt.register_post_import_hook(instrument_mysql, module)
