@@ -2,16 +2,16 @@ import sys
 
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
+import pip
 
 
 try:
     from setuptools_rust import Binding, RustExtension
 except ImportError:
-    import subprocess
-    errno = subprocess.call([sys.executable, '-m', 'pip', 'install', 'setuptools-rust'])
-    if errno:
+    status = pip.main(['install', 'setuptools-rust==0.8.3'])
+    if status !=0:
         print("Please install setuptools-rust package")
-        raise SystemExit(errno)
+        raise SystemExit(status)
     else:
         from setuptools_rust import Binding, RustExtension
 
