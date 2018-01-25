@@ -1,9 +1,19 @@
 import sys
 
+import pip
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
-from setuptools_rust import Binding, RustExtension
+
+try:
+    from setuptools_rust import Binding, RustExtension
+except ImportError:
+    status = pip.main(['install', 'setuptools-rust==0.8.3'])
+    if status != 0:
+        print("Please install setuptools-rust package")
+        raise SystemExit(status)
+    else:
+        from setuptools_rust import Binding, RustExtension
 
 
 class Tox(TestCommand):
@@ -34,11 +44,12 @@ setup(
     version='0.2.3',
     author='PushAMP LLC',
     author_email='devcore@pushamp.com',
-    description=('Agent for PAM'),
+    description='Agent for PAM',
     license='MIT',
     keywords=['pam', 'rust', 'profiling', 'performance'],
     url='https://github.com/pushamp/pamagent',
     tests_require=['tox', 'django', 'requests'],
+    setup_requires=['setuptools-rust==0.8.3'],
     cmdclass={
         'test': Tox,
     },
@@ -47,6 +58,7 @@ setup(
     packages=['pamagent', 'pamagent.hooks', 'pamagent.utils'],
     install_requires=[
         "wrapt==1.10.10",
+        "setuptools-rust==0.8.3",
     ],
     zip_safe=False,
     include_package_data=True,
