@@ -13,7 +13,7 @@ matrix:
     - sudo: required
       services:
         - docker
-      env: DOCKER_IMAGE=qpushamp/manylinux-openssl-i686
+      env: DOCKER_IMAGE=pushamp/manylinux-openssl-i686
 
 services:
   - postgresql
