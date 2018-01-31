@@ -47,11 +47,10 @@ script:
 - python setup.py develop
 - pytest
 - travis-sphinx build
+- docker run --rm -v `pwd`:/io $DOCKER_IMAGE /io/build-wheels.sh
+- ls wheelhouse/
 after_success:
   - travis-sphinx deploy
-script:
-  - docker run --rm -v `pwd`:/io $DOCKER_IMAGE /io/build-wheels.sh
-  - ls wheelhouse/
 deploy:
   provider: pypi
   user: dzhiltsov
