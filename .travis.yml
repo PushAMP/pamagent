@@ -42,11 +42,11 @@ install:
 - export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PYTHON_LIB:$HOME/rust/lib"
 - rustc -V
 - pip install pytest django requests sphinx sphinx_rtd_theme travis-sphinx psycopg2 mysql-connector-python mysqlclient
-- docker pull $DOCKER_IMAGE
 script:
 - python setup.py develop
 - pytest
 - travis-sphinx build
+- docker pull $DOCKER_IMAGE
 - docker run --rm -v `pwd`:/io $DOCKER_IMAGE /io/build-wheels.sh
 - ls wheelhouse/
 after_success:
