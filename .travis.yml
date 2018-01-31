@@ -4,6 +4,17 @@ python:
 - '3.6'
 env:
 - RUST_VERSION=nightly
+matrix:
+  include:
+    - sudo: required
+      services:
+        - docker
+      env: DOCKER_IMAGE=pushamp/manylinux-openssl-x86_64
+    - sudo: required
+      services:
+        - docker
+      env: DOCKER_IMAGE=qpushamp/manylinux-openssl-i686
+
 services:
   - postgresql
   - mysql
@@ -31,16 +42,20 @@ install:
 - export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PYTHON_LIB:$HOME/rust/lib"
 - rustc -V
 - pip install pytest django requests sphinx sphinx_rtd_theme travis-sphinx psycopg2 mysql-connector-python mysqlclient
+- docker pull $DOCKER_IMAGE
 script:
 - python setup.py develop
 - pytest
 - travis-sphinx build
 after_success:
   - travis-sphinx deploy
+script:
+  - docker run --rm -v `pwd`:/io $DOCKER_IMAGE /io/build-wheels.sh
+  - ls wheelhouse/
 deploy:
   provider: pypi
   user: dzhiltsov
-  distributions: "sdist bdist_wheel"
+  distributions: "sdist"
   on:
     tags: true
   password:
