@@ -27,7 +27,8 @@ rm -rf /io/dist/setuptools_rust*whl
 
 # Bundle external shared libraries into the wheels
 for whl in /io/dist/*.whl; do
-    auditwheel repair "$whl" -w /io/wheelhouse/
+    echo $whl
+    auditwheel repair $whl -w /io/wheelhouse/
 done
 
 # Install packages and test
