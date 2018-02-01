@@ -45,6 +45,7 @@ script:
 - pytest
 - travis-sphinx build
 - docker pull $DOCKER_IMAGE
+- mkdir dist
 - ls `pwd`
 - docker run --rm -v `pwd`:/io $DOCKER_IMAGE /io/build-wheels.sh
 - ls wheelhouse/
