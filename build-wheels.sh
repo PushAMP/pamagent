@@ -26,7 +26,7 @@ rm -rf /io/dist/semantic_version*whl
 rm -rf /io/dist/setuptools_rust*whl
 
 # Bundle external shared libraries into the wheels
-find /io/dist/*.whl | xargs -I NAME auditwheel repair NAME -w /io/wheelhouse/
+find /io/*.whl | xargs -I NAME auditwheel repair NAME -w /io/wheelhouse/
 
 # Install packages and test
 for PYBIN in /opt/python/cp{35,36}*/bin/; do
