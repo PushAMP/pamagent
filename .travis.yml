@@ -13,6 +13,7 @@ matrix:
         - docker
       env: DOCKER_IMAGE=pushamp/manylinux-openssl-i686
 
+
 services:
   - postgresql
   - mysql
@@ -21,6 +22,7 @@ dist: trusty
 group: deprecated-2017Q4
 before_install:
   - sudo apt-get -qq update
+  - if [ -z "$_COMMAND" ]; then export _COMMAND=coverage; fi
 before_script:
   - psql -c "CREATE USER test WITH PASSWORD 'test';" -U postgres
   - psql -c "CREATE DATABASE test_db with  OWNER test" -U postgres
@@ -44,11 +46,12 @@ script:
 - python setup.py develop
 - pytest
 - travis-sphinx build
-- docker pull $DOCKER_IMAGE
-- mkdir dist
+- mkdir -p dist
 - ls `pwd`
-- docker run --rm -v `pwd`:/io $DOCKER_IMAGE /io/build-wheels.sh
-- ls wheelhouse/
+- if [ "$DOCKER_IMAGE" ]; then docker pull $DOCKER_IMAGE; fi
+- if [ "$DOCKER_IMAGE" ]; then docker run --rm -v `pwd`:/io $DOCKER_IMAGE /io/build-wheels.sh; fi
+- if [ "$DOCKER_IMAGE" ]; then ls wheelhouse/; fi
+
 after_success:
   - travis-sphinx deploy
 deploy:
