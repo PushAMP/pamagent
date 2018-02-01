@@ -18,15 +18,18 @@ for PYBIN in /opt/python/cp{35,36}*/bin; do
     export LIBRARY_PATH="$LIBRARY_PATH:$PYTHON_LIB"
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PYTHON_LIB"
     "${PYBIN}/pip" install -U  setuptools setuptools-rust wheel
-    "${PYBIN}/pip" wheel /io/ -w wheelhouse/
+    "${PYBIN}/pip" wheel /io/dist -w wheelhouse/
 done
 
 # Remove universal wheels
 rm -rf /io/dist/semantic_version*whl
 rm -rf /io/dist/setuptools_rust*whl
 
+ls -lha /io/dist/
+find /io/dist/*.whl
+
 # Bundle external shared libraries into the wheels
-find /io/*.whl | xargs -I NAME auditwheel repair NAME -w /io/wheelhouse/
+find /io/dist/*.whl | xargs -I NAME auditwheel repair NAME -w /io/wheelhouse/
 
 # Install packages and test
 for PYBIN in /opt/python/cp{35,36}*/bin/; do
