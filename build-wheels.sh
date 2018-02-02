@@ -1,7 +1,5 @@
 #!/bin/bash
 set -e -x
-ls -lha /io
-ls -lha /
 # Install rust nightly
 mkdir ~/rust-installer
 curl -sL https://static.rust-lang.org/rustup.sh -o ~/rust-installer/rustup.sh
@@ -9,8 +7,6 @@ sh ~/rust-installer/rustup.sh --prefix=~/rust --spec=nightly -y --disable-sudo
 
 export PATH="$HOME/rust/bin:$PATH"
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/rust/lib"
-export OPENSSL_LIB_DIR=/usr/local/lib64
-export OPENSSL_INCLUDE_DIR=/usr/local/include
 
 # Compile wheels
 for PYBIN in /opt/python/cp{35,36}*/bin; do
@@ -20,12 +16,11 @@ for PYBIN in /opt/python/cp{35,36}*/bin; do
     "${PYBIN}/pip" install -U  setuptools setuptools-rust wheel
     "${PYBIN}/pip" wheel /io -w /io/dist/
 done
-ls -lha /io/dist/
+
 # Remove universal wheels
 rm -rf /io/dist/semantic_version*whl
 rm -rf /io/dist/setuptools_rust*whl
 
-ls -lha /io/dist/
 find /io/dist/*.whl
 
 # Bundle external shared libraries into the wheels
