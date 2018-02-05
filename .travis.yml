@@ -7,11 +7,11 @@ matrix:
     - sudo: required
       services:
         - docker
-      env: DOCKER_IMAGE=pushamp/manylinux-openssl-x86_64
+      env: DOCKER_IMAGE=pushamp/rust-manylinux-base-x86_64
     - sudo: required
       services:
         - docker
-      env: DOCKER_IMAGE=pushamp/manylinux-openssl-i686
+      env: DOCKER_IMAGE=pushamp/pushamp/rust-manylinux-base-i686
 
 
 services:
