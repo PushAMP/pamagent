@@ -1,12 +1,5 @@
 #!/bin/bash
 set -e -x
-## Install rust nightly
-#mkdir ~/rust-installer
-#curl -sL https://static.rust-lang.org/rustup.sh -o ~/rust-installer/rustup.sh
-#sh ~/rust-installer/rustup.sh --prefix=~/rust --spec=nightly -y --disable-sudo
-#
-#export PATH="$HOME/rust/bin:$PATH"
-#export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$HOME/rust/lib"
 
 # Compile wheels
 for PYBIN in /opt/python/cp{35,36}*/bin; do
