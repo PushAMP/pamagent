@@ -30,3 +30,6 @@ find /io/dist/*.whl | xargs -I NAME auditwheel repair NAME -w /io/wheelhouse/
 for PYBIN in /opt/python/cp{35,36}*/bin/; do
     "${PYBIN}/pip" install pamagent --no-index -f /io/wheelhouse/
 done
+
+chmod -Rv 777 /io/dist
+chmod -Rv 777 /io/wheelhouse
