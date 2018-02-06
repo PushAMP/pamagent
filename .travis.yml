@@ -2,8 +2,18 @@ language: python
 python:
 - '3.5'
 - '3.6'
-env:
-- RUST_VERSION=nightly
+matrix:
+  include:
+    - sudo: required
+      services:
+        - docker
+      env: DOCKER_IMAGE=pushamp/rust-manylinux-base-x86_64
+    - sudo: required
+      services:
+        - docker
+      env: DOCKER_IMAGE=pushamp/rust-manylinux-base-i686
+
+
 services:
   - postgresql
   - mysql
@@ -12,6 +22,7 @@ dist: trusty
 group: deprecated-2017Q4
 before_install:
   - sudo apt-get -qq update
+  - if [ -z "$_COMMAND" ]; then export _COMMAND=coverage; fi
 before_script:
   - psql -c "CREATE USER test WITH PASSWORD 'test';" -U postgres
   - psql -c "CREATE DATABASE test_db with  OWNER test" -U postgres
@@ -24,7 +35,7 @@ install:
 - python -c "import sysconfig; print('\n'.join(map(repr,sorted(sysconfig.get_config_vars().items()))))"
 - mkdir ~/rust-installer
 - curl -sL https://static.rust-lang.org/rustup.sh -o ~/rust-installer/rustup.sh
-- sh ~/rust-installer/rustup.sh --prefix=~/rust --spec=$RUST_VERSION -y --disable-sudo
+- sh ~/rust-installer/rustup.sh --prefix=~/rust --spec=nightly -y --disable-sudo
 - export PATH="$HOME/rust/bin:$PATH"
 - export PYTHON_LIB=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
 - export LIBRARY_PATH="$LIBRARY_PATH:$PYTHON_LIB"
@@ -35,12 +46,18 @@ script:
 - python setup.py develop
 - pytest
 - travis-sphinx build
+- mkdir -p dist
+- ls `pwd`
+- if [ "$DOCKER_IMAGE" ]; then docker pull $DOCKER_IMAGE; fi
+- if [ "$DOCKER_IMAGE" ]; then docker run --rm -v `pwd`:/io $DOCKER_IMAGE /io/build-wheels.sh; fi
+- if [ "$DOCKER_IMAGE" ]; then ls wheelhouse/; fi
+
 after_success:
   - travis-sphinx deploy
 deploy:
   provider: pypi
   user: dzhiltsov
-  distributions: "sdist bdist_wheel"
+  distributions: "sdist"
   on:
     tags: true
   password:
