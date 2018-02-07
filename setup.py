@@ -1,8 +1,17 @@
+import os
 import sys
 
 import pip
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
+
+
+THIS_DIR = os.path.dirname(os.path.realpath(__name__))
+
+
+def read(*parts):
+    with open(os.path.join(THIS_DIR, *parts)) as f:
+        return f.read()
 
 
 try:
@@ -56,10 +65,7 @@ setup(
     platforms='Posix; MacOS X; Windows',
     rust_extensions=[RustExtension('pamagent.pamagent_core', 'pamcore/Cargo.toml', binding=Binding.PyO3)],
     packages=['pamagent', 'pamagent.hooks', 'pamagent.utils'],
-    install_requires=[
-        "wrapt==1.10.10",
-        "setuptools-rust==0.8.3",
-    ],
+    install_requires=read('requirements.txt').splitlines(),
     zip_safe=False,
     include_package_data=True,
     classifiers=[
