@@ -1,8 +1,6 @@
 import os
 
-from django.conf import settings, global_settings
-from django.core.handlers.wsgi import WSGIHandler
-from django.test import RequestFactory
+
 
 import wrapt
 
@@ -16,10 +14,9 @@ from pamagent.hooks.psycopg2_hook import ConnectionFactory as PGConectionFactory
 from pamagent.hooks.mysql_hook import ConnectionFactory as MySqlConnectionFactory
 
 
-global_settings.ROOT_URLCONF = "pamagent.tests.urls"
-global_settings.ALLOWED_HOSTS = ["*"]
-settings.configure()
 
+
+init(token="qwerty")
 
 def test_request_wrap():
     instrument_requests_sessions("requests")
@@ -42,8 +39,13 @@ def test_request_request():
 
 
 def test_django_wrap():
-    wrapt.register_post_import_hook(instrument_django_core_handlers_wsgi,  'django.core.handlers.wsgi')
-    wrapt.register_post_import_hook(instrument_requests_sessions, 'requests')
+    from django.conf import settings, global_settings
+    from django.core.handlers.wsgi import WSGIHandler
+    from django.test import RequestFactory
+    global_settings.ROOT_URLCONF = "pamagent.tests.urls"
+    global_settings.ALLOWED_HOSTS = ["*"]
+    settings.configure()
+
     environ = RequestFactory().get('/').environ
     handler = WSGIHandler()
     response = handler(environ, lambda *a, **k: None)
@@ -51,13 +53,11 @@ def test_django_wrap():
 
 
 def test_hooks():
-    init(token="qwerty")
     import requests
     assert type(requests.api.request) == FuncWrapper
 
 
 def test_sqlite_hooks():
-    init(token="qwerty")
     import sqlite3
     assert type(sqlite3.connect) == SqliteConnectionFactory
     tr = Transaction(enabled=True)
@@ -79,7 +79,6 @@ def test_sqlite_hooks():
 
 
 def test_psycopg2_hooks():
-    init(token="qwerty")
     import psycopg2
     assert type(psycopg2.connect) == PGConectionFactory
     tr = Transaction(enabled=True)
@@ -96,7 +95,6 @@ def test_psycopg2_hooks():
 
 
 def test_mysql_connector_hooks():
-    init(token="qwerty")
     import mysql.connector
     assert type(mysql.connector.connect) == MySqlConnectionFactory
     tr = Transaction(enabled=True)
@@ -113,7 +111,6 @@ def test_mysql_connector_hooks():
 
 
 def test_mysqldb_hooks():
-    init(token="qwerty")
     import MySQLdb
     assert type(MySQLdb.connect) == MySqlConnectionFactory
     tr = Transaction(enabled=True)
