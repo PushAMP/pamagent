@@ -38,7 +38,8 @@ pub trait Output {
 }
 
 impl PamCollectorOutput {
-    pub fn new(token: String, addr: String) -> PamCollectorOutput {
+    pub fn new(mut token: String, addr: String) -> PamCollectorOutput {
+        token.push_str("\r\n");
         PamCollectorOutput { addr, token }
     }
 }
@@ -96,6 +97,7 @@ impl Output for PamCollectorOutput {
         let mut need_recreate: bool = false;
         let mut new_stream;
         loop {
+            trace!("In Loop");
             if need_recreate {
                 trace!("TCP Stream need to recreate");
                 thread::sleep(Duration::from_secs(10));
@@ -113,10 +115,15 @@ impl Output for PamCollectorOutput {
 
             match shared_stream.borrow_mut().try_clone() {
                 Ok(mut s) => {
+                    info!("Get OUTPUT_QUEUE");
                     let val: Option<String> = OUTPUT_QUEUE.lock().unwrap().pop_front();
                     match val {
-                        Some(v) => {
+                        Some(mut v) => {
+                            info!("Start write bytes with payload");
+                            v.push_str("\r\n");
+                            info!("Prepare send payload val {:?}", &v);
                             let _ = s.write(v.as_bytes());
+                            info!("Start read bytes after write payload");
                             let read_bytes: Result<usize, Error> = s.read(&mut [0; 128]);
                             match read_bytes {
                                 Ok(v) => {
@@ -135,6 +142,7 @@ impl Output for PamCollectorOutput {
                             }
                         }
                         None => {
+                            info!("Not val");
                             thread::sleep(Duration::from_millis(400));
                             ()
                         }
