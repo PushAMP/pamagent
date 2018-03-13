@@ -25,7 +25,7 @@ fern = "0.5"
 chrono = "0.4"
 
 [dependencies.pyo3]
-version = "0.2"
+version = "0.2.5"
 features = ["extension-module"]
 
 

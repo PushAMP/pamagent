@@ -41,7 +41,7 @@ install:
 - export LIBRARY_PATH="$LIBRARY_PATH:$PYTHON_LIB"
 - export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PYTHON_LIB:$HOME/rust/lib"
 - rustc -V
-- pip install pytest django requests sphinx sphinx_rtd_theme travis-sphinx psycopg2 mysql-connector-python mysqlclient
+- pip install pytest django requests sphinx==1.6.7 sphinx_rtd_theme travis-sphinx psycopg2 mysql-connector-python mysqlclient
 script:
 - python setup.py develop
 - pytest
