@@ -1,11 +1,8 @@
 import os
 
-
-
 import wrapt
 
 from pamagent.hooks.requests_hook import instrument_requests_sessions, instrument_requests_api
-from pamagent.hooks.django_hook import instrument_django_core_handlers_wsgi
 from pamagent.transaction import Transaction
 from pamagent.agent import init
 from pamagent.wrapper import FuncWrapper
@@ -14,9 +11,8 @@ from pamagent.hooks.psycopg2_hook import ConnectionFactory as PGConectionFactory
 from pamagent.hooks.mysql_hook import ConnectionFactory as MySqlConnectionFactory
 
 
-
-
 init(token="qwerty")
+
 
 def test_request_wrap():
     instrument_requests_sessions("requests")

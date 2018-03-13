@@ -17,7 +17,7 @@ def read(*parts):
 try:
     from setuptools_rust import Binding, RustExtension
 except ImportError:
-    status = pip.main(['install', 'setuptools-rust==0.8.3'])
+    status = pip.main(['install', 'setuptools-rust'])
     if status != 0:
         print("Please install setuptools-rust package")
         raise SystemExit(status)
@@ -58,7 +58,7 @@ setup(
     keywords=['pam', 'rust', 'profiling', 'performance'],
     url='https://github.com/pushamp/pamagent',
     tests_require=['tox', 'django', 'requests'],
-    setup_requires=['setuptools-rust==0.8.3'],
+    setup_requires=['setuptools-rust'],
     cmdclass={
         'test': Tox,
     },
