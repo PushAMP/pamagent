@@ -50,7 +50,7 @@ class Tox(TestCommand):
 
 setup(
     name='pamagent',
-    version='0.2.3',
+    version='0.2.4',
     author='PushAMP LLC',
     author_email='devcore@pushamp.com',
     description='Agent for PAM',
