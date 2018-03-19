@@ -129,4 +129,6 @@ def test_redis_hooks():
     tr = Transaction(enabled=True)
     tr.set_transaction_path("/yt")
     with tr:
-        red.get('Fed')
+        red.get("Fed")
+        red.set("Fed", 1)
+        red.get("Fed")

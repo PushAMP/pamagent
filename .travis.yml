@@ -2,16 +2,16 @@ language: python
 python:
 - '3.5'
 - '3.6'
-matrix:
-  include:
-    - sudo: required
-      services:
-        - docker
-      env: DOCKER_IMAGE=pushamp/rust-manylinux-base-x86_64
-    - sudo: required
-      services:
-        - docker
-      env: DOCKER_IMAGE=pushamp/rust-manylinux-base-i686
+#matrix:
+#  include:
+#    - sudo: required
+#      services:
+#        - docker
+#      env: DOCKER_IMAGE=pushamp/rust-manylinux-base-x86_64
+#    - sudo: required
+#      services:
+#        - docker
+#      env: DOCKER_IMAGE=pushamp/rust-manylinux-base-i686
 
 
 services:
@@ -47,11 +47,11 @@ script:
 - python setup.py develop
 - pytest
 - travis-sphinx build
-- mkdir -p dist
-- ls `pwd`
-- if [ "$DOCKER_IMAGE" ]; then docker pull $DOCKER_IMAGE; fi
-- if [ "$DOCKER_IMAGE" ]; then docker run --rm -v `pwd`:/io $DOCKER_IMAGE /io/build-wheels.sh; fi
-- if [ "$DOCKER_IMAGE" ]; then ls wheelhouse/; fi
+#- mkdir -p dist
+#- ls `pwd`
+#- if [ "$DOCKER_IMAGE" ]; then docker pull $DOCKER_IMAGE; fi
+#- if [ "$DOCKER_IMAGE" ]; then docker run --rm -v `pwd`:/io $DOCKER_IMAGE /io/build-wheels.sh; fi
+#- if [ "$DOCKER_IMAGE" ]; then ls wheelhouse/; fi
 
 after_success:
   - travis-sphinx deploy
