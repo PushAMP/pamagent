@@ -29,7 +29,7 @@ def _instance_info(connection):
     host = getattr(connection, 'host', 'localhost')
     port = getattr(connection, 'port', 0)
     db = getattr(connection, 'db', 0)
-    return host, int(port), int(db)
+    return host, int(port), str(db)
 
 
 def redis_connection_wrapper(wrapped, product):
