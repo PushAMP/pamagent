@@ -21,7 +21,7 @@ use std::thread;
 mod core;
 mod output;
 mod logging;
-use core::{DatabaseNode, ExternalNode, FuncNode, StackNode, TransactionCache};
+use core::{DatabaseNode, ExternalNode, FuncNode, StackNode, TransactionCache, CacheNode};
 use url::Url;
 use self::output::Output;
 use self::output::PamCollectorOutput;
@@ -203,6 +203,41 @@ fn init(py: Python, m: &PyModule) -> PyResult<()> {
                 operation,
                 target,
                 sql,
+            )),
+        ))
+    }
+
+    /// Push cache trace node to current transaction
+    ///
+    /// :param int id: Transaction ID. ThreadID as usual.
+    /// :param int node_id: ID of TransactionNode. Object.__id__ as usual.
+    /// :param float start_time: Timestamp when TransactionNode is activated
+    /// :param str database_product: Name of database product
+    /// :param str database_name: Name of database name.
+    /// :param str host: Host of cache instanse
+    /// :param int port: Port of cache instanse
+    ///
+    #[pyfn(m, "push_current_cache")]
+    fn push_current_cache_py(
+        id: u64,
+        node_id: u64,
+        start_time: f64,
+        database_name: String,
+        host: String,
+        port: u16,
+        operation: String,
+        database_product: String,
+    ) -> PyResult<bool> {
+        Ok(core::TRANSACTION_CACHE.write().unwrap().push_current(
+            id,
+            StackNode::Cache(CacheNode::new(
+                node_id,
+                start_time,
+                host,
+                port,
+                database_product,
+                database_name,
+                operation,
             )),
         ))
     }
