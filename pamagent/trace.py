@@ -125,6 +125,35 @@ class DatabaseTrace(TimeTrace):
         return self
 
 
+class CacheTrace(TimeTrace):
+    def __init__(self, transaction, product, operation, host, port, db=0):
+        self.product = product
+        self.operation = operation
+        self.host = host
+        self.port = port
+        self.db = db
+        super(CacheTrace, self).__init__(transaction)
+
+    def __enter__(self):
+        if not self.transaction:
+            return self
+        # pamagent_core.push_current_cache(self.transaction, id(self), time.time(), self.product, self.db, self.host,
+        #                                  self.port, self.operation)
+        self.activated = True
+        return self
+
+    def __exit__(self, exc, value, tb):
+        if not self.transaction:
+            return
+        if not self.activated:
+            _logger.error('Runtime error. The __exit__() method was called prior to __enter__()')
+            return
+        transaction = self.transaction
+        self.transaction = None
+        self.end_time = time.time()
+        # pamagent_core.pop_current(transaction, id(self), self.end_time)
+
+
 def ExternalTraceWrapper(wrapped, library, url, method):
     def dynamic_wrapper(wrapped, instance, args, kwargs):
         transaction = current_transaction()

@@ -120,3 +120,13 @@ def test_mysqldb_hooks():
         print(c.fetchone())
         conn.close()
         print(tr.dump())
+
+
+def test_redis_hooks():
+    import redis
+    pool = redis.ConnectionPool(host='localhost', port=6379, db=0)
+    red = redis.Redis(connection_pool=pool)
+    tr = Transaction(enabled=True)
+    tr.set_transaction_path("/yt")
+    with tr:
+        red.get('Fed')
