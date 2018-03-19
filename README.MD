@@ -56,7 +56,7 @@ Django
 ------
 For django project you need include call agent.init in your wsgi.py file
 For example, you would have:
-
+```python
     import os
 
     from django.core.wsgi import get_wsgi_application
@@ -76,11 +76,13 @@ For example, you would have:
     pam_enable()
 
     application = get_wsgi_application()
+```
 
 When using uWSGI you will need add specific options to the uwsgi config
 
 For example:
 
+```ini
     #test_app_uwsgi.ini
     [uwsgi]
     chdir           = /Users/dzhiltsov/Development/test_app
@@ -102,5 +104,5 @@ For example:
     lazy-apps = true
     # Custom option for configuring pamagent log level
     env = PAMAGENT_LEVEL_LOG=2
-
+```
 
