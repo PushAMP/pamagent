@@ -1,8 +1,9 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/1ccab8e3c42a441498a2f335a560a471)](https://www.codacy.com/app/zaabjuda/pamagent?utm_source=github.com&utm_medium=referral&utm_content=PushAMP/pamagent&utm_campaign=badger)
 [![Build Status](https://travis-ci.org/PushAMP/pamagent.svg?branch=master)](https://travis-ci.org/PushAMP/pamagent)
-[![PyPI pyversions](https://img.shields.io/pypi/pyversions/ansicolortags.svg)](https://pypi.python.org/pypi/pamagent/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/pamagent.svg)](https://pypi.python.org/pypi/pamagent/)
 [![PyPI version](https://badge.fury.io/py/pamagent.svg)](https://badge.fury.io/py/pamagent)
-[![Latest Docs !](https://img.shields.io/badge/Ask%20me-anything-1abc9c.svg)](https://pushamp.github.io/pamagent/)
+[![Latest Docs](https://img.shields.io/badge/Latest-Docs-1abc9c.svg)](https://pushamp.github.io/pamagent/)
+
 pamagent
 ========
 

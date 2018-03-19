@@ -55,6 +55,7 @@ setup(
     author_email='devcore@pushamp.com',
     description='Agent for PAM',
     license='MIT',
+    python_requires='>=3.5',
     keywords=['pam', 'rust', 'profiling', 'performance'],
     url='https://github.com/pushamp/pamagent',
     tests_require=['tox', 'django', 'requests'],
@@ -73,5 +74,8 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3 :: Only',
         ]
 )
