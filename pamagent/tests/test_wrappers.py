@@ -132,3 +132,4 @@ def test_redis_hooks():
         red.get("Fed")
         red.set("Fed", 1)
         red.get("Fed")
+        print(tr.dump())

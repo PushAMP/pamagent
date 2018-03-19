@@ -137,8 +137,8 @@ class CacheTrace(TimeTrace):
     def __enter__(self):
         if not self.transaction:
             return self
-        # pamagent_core.push_current_cache(self.transaction, id(self), time.time(), self.product, self.db, self.host,
-        #                                  self.port, self.operation)
+        pamagent_core.push_current_cache(self.transaction, id(self), time.time(), self.db, self.host, self.port,
+                                         self.operation, self.product)
         self.activated = True
         return self
 
@@ -151,7 +151,7 @@ class CacheTrace(TimeTrace):
         transaction = self.transaction
         self.transaction = None
         self.end_time = time.time()
-        # pamagent_core.pop_current(transaction, id(self), self.end_time)
+        pamagent_core.pop_current(transaction, id(self), self.end_time)
 
 
 def ExternalTraceWrapper(wrapped, library, url, method):
@@ -230,3 +230,7 @@ def database_trace(sql, dbapi2_module=None):
 
 def wrap_database_trace(module, object_path, sql, dbapi2_module=None):
     wrap_object(module, object_path, DatabaseTraceWrapper, (sql, dbapi2_module))
+
+
+def wrap_cache_trace(module, object_path, product, wrapper):
+    wrap_object(module, object_path, wrapper, product)

@@ -1,8 +1,8 @@
 import wrapt
 
 from pamagent.transaction_cache import current_transaction
-from pamagent.trace import CacheTrace
-from pamagent.wrapper import wrap_object, FuncWrapper
+from pamagent.trace import CacheTrace, wrap_cache_trace
+from pamagent.wrapper import FuncWrapper
 
 _redis_methods = frozenset(
     ("bgrewriteaof", "bgsave", "client_kill", "client_list", "client_getname", "client_setname", "config_get",
@@ -51,12 +51,8 @@ def redis_connection_wrapper(wrapped, product):
     return FuncWrapper(wrapped, dynamic_wrapper)
 
 
-def wrap_cache_trace(module, object_path, product):
-    wrap_object(module, object_path, redis_connection_wrapper, product)
-
-
 def instrument_redis_client(module):
-    wrap_cache_trace(module, "Connection.send_command", "Redis")
+    wrap_cache_trace(module, "Connection.send_command", "Redis", redis_connection_wrapper)
 
 
 def path():
