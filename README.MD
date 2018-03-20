@@ -33,6 +33,8 @@ Support technology
   * sqlite (builtin)
 * Library for external call
   * requests
+* Caches
+  * Redis (redis-py)
 
 TODO
 ----
@@ -41,7 +43,6 @@ TODO
 * Asyncio-http
 * cx_oracle
 * urllib
-* redis
 * memcache
 * flask
 * twisted
