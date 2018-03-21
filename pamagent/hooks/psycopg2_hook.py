@@ -4,38 +4,15 @@ import wrapt
 
 from pamagent.hooks.dbapi2 import (ConnectionWrapper as DBAPI2ConnectionWrapper,
                                    ConnectionFactory as DBAPI2ConnectionFactory)
-from pamagent.trace import register_database_client, DatabaseTrace
-from pamagent.transaction_cache import current_transaction
-from pamagent.wrapper import FuncWrapper, callable_name, wrap_object, wrap_function_wrapper
+from pamagent.trace import register_database_client
+from pamagent.wrapper import wrap_object, wrap_function_wrapper
 from pamagent.wrapper import ObjectProxy
 
 DEFAULT = object()
 
 
-class ConnectionWrapper(DBAPI2ConnectionWrapper):
-    def __enter__(self):
-        transaction = current_transaction()
-        name = callable_name(self.__wrapped__.__enter__)
-        with FuncWrapper(transaction, name):
-            self.__wrapped__.__enter__()
-        return self
-
-    def __exit__(self, exc, value, tb, *args, **kwargs):
-        transaction = current_transaction()
-        name = callable_name(self.__wrapped__.__exit__)
-        with FuncWrapper(transaction, name):
-            if exc is None:
-                with DatabaseTrace(transaction, 'COMMIT',
-                                   self._pam_dbapi2_module, self._pam_connect_params):
-                    return self.__wrapped__.__exit__(exc, value, tb)
-            else:
-                with DatabaseTrace(transaction, 'ROLLBACK',
-                                   self._pam_dbapi2_module, self._pam_connect_params):
-                    return self.__wrapped__.__exit__(exc, value, tb)
-
-
 class ConnectionFactory(DBAPI2ConnectionFactory):
-    __connection_wrapper__ = ConnectionWrapper
+    __connection_wrapper__ = DBAPI2ConnectionWrapper
 
 
 def _parse_connect_params(args, kwargs):

@@ -1,6 +1,6 @@
 from pamagent.trace import DatabaseTrace, register_database_client, FunctionTrace
 from pamagent.transaction_cache import current_transaction
-from pamagent.wrapper import wrap_object, _WrapperBase, callable_name
+from pamagent.wrapper import wrap_object, _WrapperBase, callable_name, FuncWrapper
 
 DEFAULT = object()
 
@@ -76,6 +76,30 @@ class ConnectionWrapper(_WrapperBase):
                            database_name=self._pam_connect_params[1]['database'],
                            host=self._pam_connect_params[1].get('host'), port=self._pam_connect_params[1].get('port')):
             return self.__wrapped__.rollback()
+
+    def __enter__(self):
+        transaction = current_transaction()
+        name = callable_name(self.__wrapped__.__enter__)
+        with FuncWrapper(transaction, name):
+            self.__wrapped__.__enter__()
+        return self
+
+    @staticmethod
+    def is_commit_on_exit(exc, *_):
+        if exc is None:
+            return True
+        return False
+
+    def __exit__(self, exc, value, tb, *args, **kwargs):
+        transaction = current_transaction()
+        name = callable_name(self.__wrapped__.__exit__)
+        with FuncWrapper(transaction, name):
+            if self.is_commit_on_exit(exc, value, tb):
+                with DatabaseTrace(transaction, 'COMMIT', self._pam_dbapi2_module, self._pam_connect_params):
+                    return self.__wrapped__.__exit__(exc, value, tb)
+            else:
+                with DatabaseTrace(transaction, 'ROLLBACK', self._pam_dbapi2_module, self._pam_connect_params):
+                    return self.__wrapped__.__exit__(exc, value, tb)
 
 
 class ConnectionFactory(_WrapperBase):
