@@ -7,9 +7,7 @@ use output;
 const DEFAULT_TIME_VAL: f64 = 0.0;
 
 lazy_static! {
-    pub static  ref TRANSACTION_CACHE: RwLock<TrMap> = {
-        RwLock::new(TrMap::new())
-    };
+    pub static ref TRANSACTION_CACHE: RwLock<TrMap> = { RwLock::new(TrMap::new()) };
 }
 #[derive(Debug, Serialize)]
 #[serde(tag = "type")]
@@ -91,6 +89,31 @@ impl StackNode {
     }
 }
 
+trait Node {
+    fn end_time(&self) -> f64;
+    fn start_time(&self) -> f64;
+    fn exclusive(&self) -> f64;
+    fn duration(&self) -> f64;
+    fn set_endtime(&mut self, end_time: f64);
+    fn set_exclusive(&mut self, val: f64);
+    fn set_duration(&mut self) -> f64;
+    fn append_exclusive(&mut self);
+    fn comp_duration(&mut self) -> f64 {
+        if self.end_time() < self.start_time() {
+            let ref start_time = self.start_time();
+            self.set_endtime(*start_time)
+        }
+        self.end_time() - self.start_time()
+    }
+    fn comp_exclusive(&mut self) -> f64 {
+        self.append_exclusive();
+        if self.exclusive() < 0.0 {
+            self.set_exclusive(0.0);
+        }
+        self.exclusive()
+    }
+}
+
 #[derive(Debug, Serialize)]
 pub struct FuncNode {
     node_id: u64,
@@ -101,38 +124,6 @@ pub struct FuncNode {
     node_count: u8,
     duration: f64,
     func_name: String,
-}
-
-impl FuncNode {
-    pub fn new(node_id: u64, start_time: f64, func_name: String) -> FuncNode {
-        FuncNode {
-            node_id: node_id,
-            childrens: vec![],
-            start_time: start_time,
-            end_time: DEFAULT_TIME_VAL,
-            exclusive: DEFAULT_TIME_VAL,
-            node_count: 0,
-            duration: DEFAULT_TIME_VAL,
-            func_name: func_name,
-        }
-    }
-    fn set_endtime(&mut self, end_time: f64) {
-        self.end_time = end_time;
-    }
-    fn set_duration(&mut self) -> f64 {
-        if self.end_time < self.start_time {
-            self.end_time = self.start_time
-        }
-        self.duration = self.end_time - self.start_time;
-        self.duration
-    }
-    fn comp_exclusive(&mut self) -> f64 {
-        self.exclusive += self.set_duration();
-        if self.exclusive < 0.0 {
-            self.exclusive = 0.0;
-        }
-        self.exclusive
-    }
 }
 
 #[derive(Debug, Serialize)]
@@ -149,6 +140,167 @@ pub struct ExternalNode {
     library: String,
     method: String,
     path: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct DatabaseNode {
+    node_id: u64,
+    childrens: Vec<StackNode>,
+    start_time: f64,
+    end_time: f64,
+    exclusive: f64,
+    node_count: u8,
+    duration: f64,
+    host: String,
+    port: u16,
+    database_product: String,
+    database_name: String,
+    operation: String,
+    target: String,
+    sql: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CacheNode {
+    node_id: u64,
+    childrens: Vec<StackNode>,
+    start_time: f64,
+    end_time: f64,
+    exclusive: f64,
+    node_count: u8,
+    duration: f64,
+    host: String,
+    port: u16,
+    database_product: String,
+    database_name: String,
+    operation: String,
+}
+
+impl Node for FuncNode {
+    fn end_time(&self) -> f64 {
+        self.end_time
+    }
+    fn start_time(&self) -> f64 {
+        self.start_time
+    }
+    fn exclusive(&self) -> f64 {
+        self.exclusive
+    }
+    fn duration(&self) -> f64 {
+        self.duration
+    }
+    fn set_endtime(&mut self, end_time: f64) {
+        self.end_time = end_time;
+    }
+    fn set_exclusive(&mut self, val: f64) {
+        self.exclusive = val
+    }
+    fn set_duration(&mut self) -> f64 {
+        self.duration = self.comp_duration();
+        self.duration()
+    }
+    fn append_exclusive(&mut self) {
+        self.exclusive += self.set_duration();
+    }
+}
+
+impl Node for ExternalNode {
+    fn end_time(&self) -> f64 {
+        self.end_time
+    }
+    fn start_time(&self) -> f64 {
+        self.start_time
+    }
+    fn exclusive(&self) -> f64 {
+        self.exclusive
+    }
+    fn duration(&self) -> f64 {
+        self.duration
+    }
+    fn set_endtime(&mut self, end_time: f64) {
+        self.end_time = end_time;
+    }
+    fn set_exclusive(&mut self, val: f64) {
+        self.exclusive = val
+    }
+    fn set_duration(&mut self) -> f64 {
+        self.duration = self.comp_duration();
+        self.duration()
+    }
+    fn append_exclusive(&mut self) {
+        self.exclusive += self.set_duration();
+    }
+}
+
+impl Node for DatabaseNode {
+    fn end_time(&self) -> f64 {
+        self.end_time
+    }
+    fn start_time(&self) -> f64 {
+        self.start_time
+    }
+    fn exclusive(&self) -> f64 {
+        self.exclusive
+    }
+    fn duration(&self) -> f64 {
+        self.duration
+    }
+    fn set_endtime(&mut self, end_time: f64) {
+        self.end_time = end_time;
+    }
+    fn set_exclusive(&mut self, val: f64) {
+        self.exclusive = val
+    }
+    fn set_duration(&mut self) -> f64 {
+        self.duration = self.comp_duration();
+        self.duration()
+    }
+    fn append_exclusive(&mut self) {
+        self.exclusive += self.set_duration();
+    }
+}
+
+impl Node for CacheNode {
+    fn end_time(&self) -> f64 {
+        self.end_time
+    }
+    fn start_time(&self) -> f64 {
+        self.start_time
+    }
+    fn exclusive(&self) -> f64 {
+        self.exclusive
+    }
+    fn duration(&self) -> f64 {
+        self.duration
+    }
+    fn set_endtime(&mut self, end_time: f64) {
+        self.end_time = end_time;
+    }
+    fn set_exclusive(&mut self, val: f64) {
+        self.exclusive = val
+    }
+    fn set_duration(&mut self) -> f64 {
+        self.duration = self.comp_duration();
+        self.duration()
+    }
+    fn append_exclusive(&mut self) {
+        self.exclusive += self.set_duration();
+    }
+}
+
+impl FuncNode {
+    pub fn new(node_id: u64, start_time: f64, func_name: String) -> FuncNode {
+        FuncNode {
+            node_id,
+            childrens: vec![],
+            start_time,
+            end_time: DEFAULT_TIME_VAL,
+            exclusive: DEFAULT_TIME_VAL,
+            node_count: 0,
+            duration: DEFAULT_TIME_VAL,
+            func_name,
+        }
+    }
 }
 
 impl ExternalNode {
@@ -176,41 +328,6 @@ impl ExternalNode {
             path: path.to_string(),
         }
     }
-    fn set_endtime(&mut self, end_time: f64) {
-        self.end_time = end_time;
-    }
-    fn set_duration(&mut self) -> f64 {
-        if self.end_time < self.start_time {
-            self.end_time = self.start_time
-        }
-        self.duration = self.end_time - self.start_time;
-        self.duration
-    }
-    fn comp_exclusive(&mut self) -> f64 {
-        self.exclusive += self.set_duration();
-        if self.exclusive < 0.0 {
-            self.exclusive = 0.0;
-        }
-        self.exclusive
-    }
-}
-
-#[derive(Debug, Serialize)]
-pub struct DatabaseNode {
-    node_id: u64,
-    childrens: Vec<StackNode>,
-    start_time: f64,
-    end_time: f64,
-    exclusive: f64,
-    node_count: u8,
-    duration: f64,
-    host: String,
-    port: u16,
-    database_product: String,
-    database_name: String,
-    operation: String,
-    target: String,
-    sql: String,
 }
 
 impl DatabaseNode {
@@ -259,39 +376,6 @@ impl DatabaseNode {
             sql: sql,
         }
     }
-    fn set_endtime(&mut self, end_time: f64) {
-        self.end_time = end_time;
-    }
-    fn set_duration(&mut self) -> f64 {
-        if self.end_time < self.start_time {
-            self.end_time = self.start_time
-        }
-        self.duration = self.end_time - self.start_time;
-        self.duration
-    }
-    fn comp_exclusive(&mut self) -> f64 {
-        self.exclusive += self.set_duration();
-        if self.exclusive < 0.0 {
-            self.exclusive = 0.0;
-        }
-        self.exclusive
-    }
-}
-
-#[derive(Debug, Serialize)]
-pub struct CacheNode {
-    node_id: u64,
-    childrens: Vec<StackNode>,
-    start_time: f64,
-    end_time: f64,
-    exclusive: f64,
-    node_count: u8,
-    duration: f64,
-    host: String,
-    port: u16,
-    database_product: String,
-    database_name: String,
-    operation: String,
 }
 
 impl CacheNode {
@@ -305,40 +389,21 @@ impl CacheNode {
         operation: String,
     ) -> CacheNode {
         CacheNode {
-            node_id: node_id,
+            node_id,
             childrens: vec![],
-            start_time: start_time,
+            start_time,
             end_time: DEFAULT_TIME_VAL,
             exclusive: DEFAULT_TIME_VAL,
             node_count: 0,
             duration: DEFAULT_TIME_VAL,
-            host: host,
-            port: port,
+            host,
+            port,
             database_name: database_name.to_string(),
             database_product: database_product.to_string(),
             operation: operation.to_string(),
         }
     }
-    fn set_endtime(&mut self, end_time: f64) {
-        self.end_time = end_time;
-    }
-    fn set_duration(&mut self) -> f64 {
-        if self.end_time < self.start_time {
-            self.end_time = self.start_time
-        }
-        self.duration = self.end_time - self.start_time;
-        self.duration
-    }
-    fn comp_exclusive(&mut self) -> f64 {
-        self.exclusive += self.set_duration();
-        if self.exclusive < 0.0 {
-            self.exclusive = 0.0;
-        }
-        self.exclusive
-    }
 }
-
-
 
 #[derive(Debug, Serialize)]
 struct TransactionNode {
@@ -378,21 +443,6 @@ impl<'b> TransactionCache for TrMap {
     fn new() -> TrMap {
         TrMap(HashMap::new())
     }
-    fn set_transaction(&mut self, id: u64, transaction: String, path: Option<String>) -> bool {
-        match self.0.entry(id) {
-            Entry::Occupied(_) => false,
-            Entry::Vacant(v) => {
-                v.insert(TransactionNode {
-                    base_name: transaction,
-                    nodes_stack: vec![],
-                    trace_node_count: 0,
-                    guid: format!("{:x}", rand::random::<u64>()),
-                    path: path.unwrap_or_else(|| "".to_owned()),
-                });
-                true
-            }
-        }
-    }
     fn get_transaction_start_time(&self, id: u64) -> f64 {
         match self.0.get(&id) {
             Some(tr) => {
@@ -413,6 +463,21 @@ impl<'b> TransactionCache for TrMap {
                 DEFAULT_TIME_VAL
             }
             None => DEFAULT_TIME_VAL,
+        }
+    }
+    fn set_transaction(&mut self, id: u64, transaction: String, path: Option<String>) -> bool {
+        match self.0.entry(id) {
+            Entry::Occupied(_) => false,
+            Entry::Vacant(v) => {
+                v.insert(TransactionNode {
+                    base_name: transaction,
+                    nodes_stack: vec![],
+                    trace_node_count: 0,
+                    guid: format!("{:x}", rand::random::<u64>()),
+                    path: path.unwrap_or_else(|| "".to_owned()),
+                });
+                true
+            }
         }
     }
     fn availability_transaction(&self, id: u64) -> Option<u64> {
@@ -442,7 +507,7 @@ impl<'b> TransactionCache for TrMap {
     }
 
     fn pop_current(&mut self, id: u64, node_id: u64, end_time: f64) -> Option<u64> {
-        let c_tr = match self.0.get_mut(&id) {
+        let c_tr: &mut TransactionNode = match self.0.get_mut(&id) {
             Some(v) => v,
             None => return None,
         };
@@ -459,7 +524,7 @@ impl<'b> TransactionCache for TrMap {
 
             return None;
         };
-        let cur_id = match c_tr.nodes_stack.pop() {
+        let cur_id: StackNode = match c_tr.nodes_stack.pop() {
             Some(mut v) => {
                 v.set_endtime(end_time);
                 v.comp_exclusive();
@@ -468,7 +533,7 @@ impl<'b> TransactionCache for TrMap {
             }
             None => return None,
         };
-        let ln = c_tr.nodes_stack.len();
+        let ln: usize = c_tr.nodes_stack.len();
 
         if cur_id.get_node_id() == node_id {
             let parent_node: &mut StackNode = &mut c_tr.nodes_stack[ln - 1];
