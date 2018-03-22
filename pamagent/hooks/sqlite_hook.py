@@ -34,7 +34,8 @@ class ConnectionWrapper(DBAPI2ConnectionWrapper):
     __cursor_wrapper__ = CursorWrapper
 
     @staticmethod
-    def is_commit_on_exit(exc, value, tb):
+    def is_commit_on_exit(*args):
+        exc, value, tb = args
         if exc is None and value is None and tb is None:
             return True
         return False

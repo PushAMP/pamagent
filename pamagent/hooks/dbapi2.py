@@ -85,7 +85,8 @@ class ConnectionWrapper(_WrapperBase):
         return self
 
     @staticmethod
-    def is_commit_on_exit(exc, *_):
+    def is_commit_on_exit(*args):
+        exc, _, _ = args
         if exc is None:
             return True
         return False
