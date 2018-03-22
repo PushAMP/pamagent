@@ -14,7 +14,7 @@ use std::io;
 use backoff;
 
 lazy_static! {
-    pub static ref OUTPUT_QUEUE:Arc<Mutex<VecDeque<String>>> = {
+    pub static ref OUTPUT_QUEUE: Arc<Mutex<VecDeque<String>>> = {
         let vector: VecDeque<String> = VecDeque::new();
         Arc::new(Mutex::new(vector))
     };
@@ -68,7 +68,7 @@ impl Output for PamCollectorOutput {
             trace!("Write token payload to server. Write bytes: {:?}", status_w);
             status_w.map_err(new_io_err)?;
             let mut buffer: [u8; 10] = [0; 10];
-            let stat = stream.read(&mut buffer).map_err(new_io_err)?;
+            let stat: usize = stream.read(&mut buffer).map_err(new_io_err)?;
             fn check_stat(stat: usize) -> Result<(), io::Error> {
                 match stat {
                     0 => {
@@ -95,7 +95,7 @@ impl Output for PamCollectorOutput {
     fn consume_events(&self, shared_stream: Rc<RefCell<TcpStream>>) {
         info!("Consume event output loop started");
         let mut need_recreate: bool = false;
-        let mut new_stream;
+        let mut new_stream: TcpStream;
         loop {
             trace!("In Loop");
             if need_recreate {

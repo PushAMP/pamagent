@@ -142,17 +142,6 @@ class CacheTrace(TimeTrace):
         self.activated = True
         return self
 
-    def __exit__(self, exc, value, tb):
-        if not self.transaction:
-            return
-        if not self.activated:
-            _logger.error('Runtime error. The __exit__() method was called prior to __enter__()')
-            return
-        transaction = self.transaction
-        self.transaction = None
-        self.end_time = time.time()
-        pamagent_core.pop_current(transaction, id(self), self.end_time)
-
 
 def ExternalTraceWrapper(wrapped, library, url, method):
     def dynamic_wrapper(wrapped, instance, args, kwargs):

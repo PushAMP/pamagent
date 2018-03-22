@@ -21,7 +21,7 @@ use std::thread;
 mod core;
 mod output;
 mod logging;
-use core::{DatabaseNode, ExternalNode, FuncNode, StackNode, TransactionCache, CacheNode};
+use core::{CacheNode, DatabaseNode, ExternalNode, FuncNode, StackNode, TransactionCache};
 use url::Url;
 use self::output::Output;
 use self::output::PamCollectorOutput;
