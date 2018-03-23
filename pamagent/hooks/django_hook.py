@@ -1,6 +1,6 @@
 import wrapt
 
-from ..web_transaction import WSGIApplicationWrapper
+from ..web_transaction import wsgi_application_wrapper
 
 
 def instrument_django_core_handlers_wsgi(module):
@@ -12,7 +12,7 @@ def instrument_django_core_handlers_wsgi(module):
     import django
 
     framework = ('Django', django.get_version())
-    module.WSGIHandler.__call__ = WSGIApplicationWrapper(module.WSGIHandler.__call__, framework=framework)
+    module.WSGIHandler.__call__ = wsgi_application_wrapper(module.WSGIHandler.__call__, framework=framework)
 
 
 def patch():

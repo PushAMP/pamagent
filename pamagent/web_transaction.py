@@ -5,7 +5,6 @@ import urllib.parse
 
 from .trace import FunctionTrace
 from .transaction import Transaction
-from .transaction_cache import set_transaction_name
 from .wrapper import callable_name, FuncWrapper
 
 
@@ -44,8 +43,6 @@ class WebTransaction(Transaction):
             else:
                 self._path = script_name + path_info
 
-            # self.save_transaction()
-
             if self._request_uri is None:
                 self._request_uri = self._path
         else:
@@ -59,6 +56,10 @@ class WebTransaction(Transaction):
             self._request_params.update(params)
         self.url_name = 'unknown'
         self.view_name = 'unknown'
+
+    @property
+    def path(self):
+        return self._request_uri
 
 
 class _WSGIInputWrapper(object):
@@ -101,36 +102,30 @@ class _WSGIInputWrapper(object):
         return lines
 
 
-def WSGIApplicationWrapper(wrapped, application=None, name=None, group=None, framework=None):
+def wsgi_application_wrapper(wrapped, name=None, framework=None):
     if framework is not None and not isinstance(framework, tuple):
         framework = (framework, None)
 
-    def _pam_wsgi_application_wrapper_(wrapped, instance, args, kwargs):
+    def _pam_wsgi_application_wrapper_(wrapped_func, _, args, kwargs):
 
-
-        def _args(environ, start_response, *args, **kwargs):
-            return environ, start_response
+        def _args(environment, start_response, *_, **__):
+            return environment, start_response
 
         environ, _ = _args(*args, **kwargs)
 
         transaction = WebTransaction(environ)
         if framework is not None:
-            transaction._name = callable_name(wrapped)
+            transaction._name = callable_name(wrapped_func)
 
         elif name:
             transaction._name = name
         transaction.__enter__()
-        if name is None:
-            set_transaction_name(callable_name(wrapped))
-        else:
-            set_transaction_name(name)
-
         try:
             if 'wsgi.input' in environ:
                 environ['wsgi.input'] = _WSGIInputWrapper(transaction, environ['wsgi.input'])
-            with FunctionTrace(transaction.thread_id, name='Application', func_name=callable_name(wrapped)):
-                result = wrapped(*args, **kwargs)
-        except:
+            with FunctionTrace(transaction.thread_id, name='Application', func_name=callable_name(wrapped_func)):
+                result = wrapped_func(*args, **kwargs)
+        except Exception:
             transaction.__exit__(*sys.exc_info())
             raise
 

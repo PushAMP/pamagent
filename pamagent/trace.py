@@ -3,6 +3,7 @@ import functools
 import time
 from typing import Optional
 
+# noinspection PyUnresolvedReferences
 from pamagent import pamagent_core
 from pamagent.utils.sql_statement import sql_statement
 
@@ -143,12 +144,12 @@ class CacheTrace(TimeTrace):
         return self
 
 
-def ExternalTraceWrapper(wrapped, library, url, method):
-    def dynamic_wrapper(wrapped, instance, args, kwargs):
+def external_trace_wrapper(wrapped, library, url, method):
+    def dynamic_wrapper(wrapped_func, instance, args, kwargs):
         transaction = current_transaction()
 
         if transaction is None:
-            return wrapped(*args, **kwargs)
+            return wrapped_func(*args, **kwargs)
 
         if callable(url):
             if instance is not None:
@@ -169,17 +170,17 @@ def ExternalTraceWrapper(wrapped, library, url, method):
             _method = method
 
         with ExternalTrace(transaction, library, _url, _method):
-            return wrapped(*args, **kwargs)
+            return wrapped_func(*args, **kwargs)
 
     return FuncWrapper(wrapped, dynamic_wrapper)
 
 
 def external_trace(library, url, method=None):
-    return functools.partial(ExternalTraceWrapper, library=library, url=url, method=method)
+    return functools.partial(external_trace_wrapper, library=library, url=url, method=method)
 
 
 def wrap_external_trace(module, object_path, library, url, method=None):
-    wrap_object(module, object_path, ExternalTraceWrapper, library, url, method)
+    wrap_object(module, object_path, external_trace_wrapper, library, url, method)
 
 
 def register_database_client(dbapi2_module, database_product, quoting_style='single', instance_info=None):
@@ -192,12 +193,12 @@ def register_database_client(dbapi2_module, database_product, quoting_style='sin
     dbapi2_module._pam_datastore_instance_feature_flag = False
 
 
-def DatabaseTraceWrapper(wrapped, sql, dbapi2_module=None):
-    def _pam_database_trace_wrapper_(wrapped, instance, args, kwargs):
+def database_trace_wrapper(wrapped, sql, dbapi2_module=None):
+    def _pam_database_trace_wrapper_(wrapped_func, instance, args, kwargs):
         transaction = current_transaction()
 
         if transaction is None:
-            return wrapped(*args, **kwargs)
+            return wrapped_func(*args, **kwargs)
 
         if callable(sql):
             if instance is not None:
@@ -208,17 +209,17 @@ def DatabaseTraceWrapper(wrapped, sql, dbapi2_module=None):
             _sql = sql
 
         with DatabaseTrace(transaction, _sql, dbapi2_module):
-            return wrapped(*args, **kwargs)
+            return wrapped_func(*args, **kwargs)
 
     return FuncWrapper(wrapped, _pam_database_trace_wrapper_)
 
 
 def database_trace(sql, dbapi2_module=None):
-    return functools.partial(DatabaseTraceWrapper, sql=sql, dbapi2_module=dbapi2_module)
+    return functools.partial(database_trace_wrapper, sql=sql, dbapi2_module=dbapi2_module)
 
 
 def wrap_database_trace(module, object_path, sql, dbapi2_module=None):
-    wrap_object(module, object_path, DatabaseTraceWrapper, (sql, dbapi2_module))
+    wrap_object(module, object_path, database_trace_wrapper, (sql, dbapi2_module))
 
 
 def wrap_cache_trace(module, object_path, product, wrapper):

@@ -20,7 +20,7 @@ class ConnectionFactory(DBAPI2ConnectionFactory):
     __connection_wrapper__ = ConnectionWrapper
 
 
-def _instance_info(args, kwargs):
+def _instance_info(_, kwargs):
     host = kwargs.get('host')
     port = kwargs.get('port')
     db = kwargs.get('db')

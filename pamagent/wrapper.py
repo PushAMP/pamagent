@@ -9,7 +9,7 @@ from wrapt import BoundFunctionWrapper, FunctionWrapper, ObjectProxy
 _logger = logging.getLogger(__name__)
 
 
-class _WrapperBase(ObjectProxy):
+class WrapperBase(ObjectProxy):
     def __setattr__(self, name, value):
         if name.startswith('_pam_'):
             name = name.replace('_pam_', '_self_', 1)
@@ -32,11 +32,11 @@ class _WrapperBase(ObjectProxy):
             ObjectProxy.__delattr__(self, name)
 
 
-class _PamBoundFunctionWrapper(_WrapperBase, BoundFunctionWrapper):
+class _PamBoundFunctionWrapper(WrapperBase, BoundFunctionWrapper):
     pass
 
 
-class FuncWrapper(_WrapperBase, FunctionWrapper):
+class FuncWrapper(WrapperBase, FunctionWrapper):
     __bound_function_wrapper__ = _PamBoundFunctionWrapper
 
 
@@ -102,8 +102,8 @@ def _object_context(obj):
     path = getattr(obj, '__qualname__', None)
     if path is None and hasattr(obj, '__class__'):
         path = getattr(obj.__class__, '__qualname__')
-    mname = _module_name(obj)
-    return mname, path
+    module_name = _module_name(obj)
+    return module_name, path
 
 
 def object_context(target):
@@ -150,7 +150,7 @@ def callable_name(obj, separator=':'):
 
 
 def function_wrapper(wrapper):
-    def _wrapper(wrapped, instance, args, kwargs):
+    def _wrapper(_, instance, args, __):
         target_wrapped = args[0]
         if instance is None:
             target_wrapper = wrapper
@@ -163,14 +163,14 @@ def function_wrapper(wrapper):
     return FuncWrapper(wrapper, _wrapper)
 
 
-def post_function(function):
+def post_function(func):
     @function_wrapper
     def _wrapper(wrapped, instance, args, kwargs):
         result = wrapped(*args, **kwargs)
         if instance is not None:
-            function(instance, *args, **kwargs)
+            func(instance, *args, **kwargs)
         else:
-            function(*args, **kwargs)
+            func(*args, **kwargs)
         return result
 
     return _wrapper

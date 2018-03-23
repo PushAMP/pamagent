@@ -2,6 +2,7 @@ import logging
 from itertools import count
 
 from pamagent.hooks import requests_hook, django_hook, sqlite_hook, psycopg2_hook, mysql_hook, redis_hook
+# noinspection PyUnresolvedReferences
 from pamagent import pamagent_core
 
 _logger = logging.getLogger(__name__)
