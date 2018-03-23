@@ -1,11 +1,11 @@
 from pamagent.trace import DatabaseTrace, register_database_client, FunctionTrace
 from pamagent.transaction_cache import current_transaction
-from pamagent.wrapper import wrap_object, _WrapperBase, callable_name, FuncWrapper
+from pamagent.wrapper import wrap_object, WrapperBase, callable_name, FuncWrapper
 
 DEFAULT = object()
 
 
-class CursorWrapper(_WrapperBase):
+class CursorWrapper(WrapperBase):
 
     def __init__(self, cursor, dbapi2_module, connect_params, cursor_params):
         super(CursorWrapper, self).__init__(cursor)
@@ -42,16 +42,16 @@ class CursorWrapper(_WrapperBase):
                                self._pam_cursor_params):
                 return self.__wrapped__.executemany(sql, seq_of_parameters)
 
-    def callproc(self, procname, parameters=DEFAULT):
+    def callproc(self, procedure_name, parameters=DEFAULT):
         transaction = current_transaction()
-        with DatabaseTrace(transaction, 'CALL %s' % procname, self._pam_dbapi2_module, self._pam_connect_params):
+        with DatabaseTrace(transaction, 'CALL %s' % procedure_name, self._pam_dbapi2_module, self._pam_connect_params):
             if parameters is not DEFAULT:
-                return self.__wrapped__.callproc(procname, parameters)
+                return self.__wrapped__.callproc(procedure_name, parameters)
             else:
-                return self.__wrapped__.callproc(procname)
+                return self.__wrapped__.callproc(procedure_name)
 
 
-class ConnectionWrapper(_WrapperBase):
+class ConnectionWrapper(WrapperBase):
     __cursor_wrapper__ = CursorWrapper
 
     def __init__(self, connection, dbapi2_module, connect_params):
@@ -103,7 +103,7 @@ class ConnectionWrapper(_WrapperBase):
                     return self.__wrapped__.__exit__(exc, value, tb)
 
 
-class ConnectionFactory(_WrapperBase):
+class ConnectionFactory(WrapperBase):
     __connection_wrapper__ = ConnectionWrapper
 
     def __init__(self, connect, dbapi2_module):

@@ -34,19 +34,19 @@ def _instance_info(connection):
 
 def redis_connection_wrapper(wrapped, product):
 
-    def dynamic_wrapper(wrapped, *args):
+    def dynamic_wrapper(wrapped_func, *args):
         transaction = current_transaction()
         if transaction is None:
-            return wrapped(*args[1])
+            return wrapped_func(*args[1])
         host, port, db = _instance_info(args[0])
         try:
             method = args[1][0].lower()
         except (IndexError, AttributeError):
             method = None
         if method not in _redis_methods:
-            return wrapped(*args[1])
+            return wrapped_func(*args[1])
         with CacheTrace(transaction, product, method, host=host, port=port, db=db):
-            return wrapped(*args[1])
+            return wrapped_func(*args[1])
 
     return FuncWrapper(wrapped, dynamic_wrapper)
 

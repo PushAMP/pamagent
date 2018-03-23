@@ -7,7 +7,7 @@ from pamagent.transaction import Transaction
 from pamagent.agent import init
 from pamagent.wrapper import FuncWrapper
 from pamagent.hooks.sqlite_hook import ConnectionFactory as SqliteConnectionFactory
-from pamagent.hooks.psycopg2_hook import ConnectionFactory as PGConectionFactory
+from pamagent.hooks.psycopg2_hook import ConnectionFactory as PGConnectionFactory
 from pamagent.hooks.mysql_hook import ConnectionFactory as MySqlConnectionFactory
 
 
@@ -76,7 +76,7 @@ def test_sqlite_hooks():
 
 def test_psycopg2_hooks():
     import psycopg2
-    assert type(psycopg2.connect) == PGConectionFactory
+    assert type(psycopg2.connect) == PGConnectionFactory
     tr = Transaction(enabled=True)
     tr.set_transaction_path("/yt")
     with tr:

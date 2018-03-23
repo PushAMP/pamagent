@@ -1,6 +1,7 @@
 import logging
 import time
 
+# noinspection PyUnresolvedReferences
 from pamagent import pamagent_core
 
 from .transaction_cache import save_transaction, drop_transaction, current_thread_id, get_start_time, get_end_time

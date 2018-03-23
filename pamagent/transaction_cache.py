@@ -2,6 +2,7 @@ import logging
 
 import _thread
 
+# noinspection PyUnresolvedReferences
 from pamagent import pamagent_core
 
 _logger = logging.getLogger(__name__)
@@ -40,13 +41,14 @@ def drop_transaction(transaction):
         raise RuntimeError('No active transaction')
 
 
-def set_transaction_name(name):
+def set_transaction_path(path):
     """
-    Set transaction path by current thread ID
+    :param path: path of request URI
+    :return: None
     """
-    res = pamagent_core.set_transaction_path(id=current_thread_id(), path=name)
+    res = pamagent_core.set_transaction_path(id=current_thread_id(), path=path)
     if not res:
-        raise RuntimeError('No active transaction')
+        raise RuntimeError("No active transaction")
 
 
 def get_start_time(transaction):

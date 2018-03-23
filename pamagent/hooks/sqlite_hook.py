@@ -81,7 +81,7 @@ class ConnectionFactory(DBAPI2ConnectionFactory):
 
 
 def instance_info(args, kwargs):
-    def _bind_params(database_name, *args, **kwargs):
+    def _bind_params(database_name, *_, **__):
         return database_name
 
     database = _bind_params(*args, **kwargs)
