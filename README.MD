@@ -24,7 +24,7 @@ Other OS
 
 Support technology
 ------------------
-* Framaworks
+* Frameworks
   * Django
 * Database(Drivers)
   * mysql-connector-python
@@ -50,12 +50,12 @@ TODO
 * Jinja2
 
 
-How-to setup your app
+How to setup your app
 =====================
 
 Django
 ------
-For django project you need include call agent.init in your wsgi.py file
+For django project you need to call agent.init in your wsgi.py file
 For example, you would have:
 ```python
 import os
@@ -79,7 +79,7 @@ pam_enable()
 application = get_wsgi_application()
 ```
 
-When using uWSGI you will need add specific options to the uwsgi config
+When using uWSGI you will need to add specific options to the uwsgi config
 
 For example:
 
