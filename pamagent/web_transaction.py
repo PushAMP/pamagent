@@ -7,7 +7,6 @@ from .trace import FunctionTrace
 from .transaction import Transaction
 from .wrapper import callable_name, FuncWrapper
 
-
 _logger = logging.getLogger(__name__)
 
 
@@ -102,6 +101,41 @@ class _WSGIInputWrapper(object):
         return lines
 
 
+class _WSGIApplicationIterable(object):
+
+    def __init__(self, transaction, generator):
+        self.transaction = transaction
+        self.generator = generator
+        self.closed = False
+
+    def __iter__(self):
+        try:
+            for item in self.generator:
+                yield item
+        except GeneratorExit:
+            raise
+
+        except Exception:
+            raise
+
+        finally:
+            self.close()
+
+    def close(self):
+        if self.closed:
+            return
+        try:
+            self.generator.close()
+        except Exception:
+            self.transaction.__exit__(*sys.exc_info())
+            raise
+
+        else:
+            self.transaction.__exit__(None, None, None)
+        finally:
+            self.closed = True
+
+
 def wsgi_application_wrapper(wrapped, name=None, framework=None):
     if framework is not None and not isinstance(framework, tuple):
         framework = (framework, None)
@@ -128,8 +162,6 @@ def wsgi_application_wrapper(wrapped, name=None, framework=None):
         except Exception:
             transaction.__exit__(*sys.exc_info())
             raise
-
-        transaction.__exit__(None, None, None)
-        return result
+        return _WSGIApplicationIterable(transaction, result)
 
     return FuncWrapper(wrapped, _pam_wsgi_application_wrapper_)
