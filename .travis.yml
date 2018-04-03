@@ -42,10 +42,11 @@ install:
 - export LIBRARY_PATH="$LIBRARY_PATH:$PYTHON_LIB"
 - export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$PYTHON_LIB:$HOME/rust/lib"
 - rustc -V
-- pip install pytest django requests sphinx==1.6.7 sphinx_rtd_theme travis-sphinx psycopg2 mysql-connector-python mysqlclient redis
+- pip install pytest django requests sphinx==1.6.7 sphinx_rtd_theme travis-sphinx psycopg2 mysql-connector-python mysqlclient redis codacy-coverage pytest-cov
 script:
 - python setup.py develop
-- pytest
+- py.test --cov-report html --cov-report xml --cov-report annotate --cov=pamagent pamagent/tests/
+- python-codacy-coverage -r coverage.xml
 - travis-sphinx build
 #- mkdir -p dist
 #- ls `pwd`

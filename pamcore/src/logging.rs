@@ -12,11 +12,11 @@ fn setup_logging(verbosity: u8) -> Result<(), fern::InitError> {
 
     base_config = match verbosity {
         0 => base_config
-            .level(log::LevelFilter::Info)
-            .level_for("overly-verbose-target", log::LevelFilter::Warn),
+            .level(log::LevelFilter::Warn)
+            .level_for("overly-verbose-target", log::LevelFilter::Error),
         1 => base_config
-            .level(log::LevelFilter::Debug)
-            .level_for("overly-verbose-target", log::LevelFilter::Info),
+            .level(log::LevelFilter::Info)
+            .level_for("overly-verbose-target", log::LevelFilter::Debug),
         2 => base_config.level(log::LevelFilter::Debug),
         _3_or_more => base_config.level(log::LevelFilter::Trace),
     };

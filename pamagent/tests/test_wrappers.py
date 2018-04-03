@@ -45,7 +45,7 @@ def test_django_wrap():
     environ = RequestFactory().get('/').environ
     handler = WSGIHandler()
     response = handler(environ, lambda *a, **k: None)
-    assert response.status_code == 200
+    assert response.generator.status_code == 200
 
 
 def test_hooks():
