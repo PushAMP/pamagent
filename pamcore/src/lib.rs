@@ -1,6 +1,7 @@
 //#![crate_type = "dylib"]
 #![feature(proc_macro, specialization)]
 #![feature(refcell_replace_swap)]
+#![feature(proc_macro_path_invoc)]
 extern crate pyo3;
 use pyo3::prelude::*;
 extern crate backoff;
