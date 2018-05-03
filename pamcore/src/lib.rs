@@ -15,6 +15,7 @@ extern crate rand;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate url;
+extern crate native_tls;
 
 use std::thread;
 

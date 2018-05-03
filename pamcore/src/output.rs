@@ -1,5 +1,4 @@
 use std::collections::VecDeque;
-use std::io::prelude::*;
 use std::io::Error;
 use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
@@ -12,6 +11,8 @@ use backoff::{ExponentialBackoff, Operation};
 use std::fmt::Display;
 use std::io;
 use backoff;
+use native_tls::{TlsConnector, TlsStream};
+use std::io::{Read, Write};
 
 lazy_static! {
     pub static ref OUTPUT_QUEUE: Arc<Mutex<VecDeque<String>>> = {
@@ -20,9 +21,15 @@ lazy_static! {
     };
 }
 
-fn get_connection(addr: &str) -> Result<TcpStream, Error> {
-    info!("Try to connect to remote server.");
-    let stream: Result<TcpStream, Error> = TcpStream::connect(addr);
+
+fn get_connection(addr: &str) -> Result<TlsStream<TcpStream>, Error> {
+    trace!("Try to connect to remote server.");
+    let connector = TlsConnector::builder().unwrap().build().unwrap();
+    trace!("TLSConnector is builded");
+    let stream = TcpStream::connect(addr).map_err(new_io_err)?;
+    info!("TCPStream is connect");
+    let stream = connector.connect("pushamp.com", stream).map_err(new_io_err);
+    trace!("Return TLS STREAM");
     stream
 }
 #[derive(Clone)]
@@ -33,8 +40,8 @@ pub struct PamCollectorOutput {
 
 pub trait Output {
     fn start(&self);
-    fn recreate_stream(&self) -> Result<TcpStream, backoff::Error<io::Error>>;
-    fn consume_events(&self, shared_stream: Rc<RefCell<TcpStream>>);
+    fn recreate_stream(&self) -> Result<TlsStream<TcpStream>, backoff::Error<io::Error>>;
+    fn consume_events(&self, shared_stream: Rc<RefCell<TlsStream<TcpStream>>>);
 }
 
 impl PamCollectorOutput {
@@ -53,17 +60,20 @@ impl Output for PamCollectorOutput {
         trace!("Handle PamCollectorOutput::start");
         match self.recreate_stream() {
             Ok(v) => {
-                let shared_stream: Rc<RefCell<TcpStream>> = Rc::new(RefCell::new(v));
+                let shared_stream: Rc<RefCell<TlsStream<TcpStream>>> = Rc::new(RefCell::new(v));
+                info!("Start consume events");
                 self.consume_events(shared_stream);
             }
             Err(e) => warn!("Error while creating TCP Stream. Error: {}", e),
         };
     }
 
-    fn recreate_stream(&self) -> Result<TcpStream, backoff::Error<io::Error>> {
+    fn recreate_stream(&self) -> Result<TlsStream<TcpStream>, backoff::Error<io::Error>> {
         let mut backoff = ExponentialBackoff::default();
+        info!("BackOff configured");
         let mut op = || {
-            let mut stream: TcpStream = get_connection(&self.addr).map_err(new_io_err)?;
+            let mut stream = get_connection(&self.addr).map_err(new_io_err)?;
+            info!("Prepare write token");
             let status_w: Result<usize, Error> = stream.write(self.token.as_bytes());
             trace!("Write token payload to server. Write bytes: {:?}", status_w);
             status_w.map_err(new_io_err)?;
@@ -92,10 +102,10 @@ impl Output for PamCollectorOutput {
         op.retry(&mut backoff)
     }
 
-    fn consume_events(&self, shared_stream: Rc<RefCell<TcpStream>>) {
+    fn consume_events(&self, shared_stream: Rc<RefCell<TlsStream<TcpStream>>>) {
         info!("Consume event output loop started");
-        let mut need_recreate: bool = false;
-        let mut new_stream: TcpStream;
+        let mut need_recreate: bool = true;
+        let mut new_stream: TlsStream<TcpStream>;
         loop {
             trace!("In Loop");
             if need_recreate {
@@ -113,8 +123,7 @@ impl Output for PamCollectorOutput {
                 need_recreate = false;
             }
 
-            match shared_stream.borrow_mut().try_clone() {
-                Ok(mut s) => {
+
                     info!("Get OUTPUT_QUEUE");
                     let val: Option<String> = OUTPUT_QUEUE.lock().unwrap().pop_front();
                     match val {
@@ -122,9 +131,9 @@ impl Output for PamCollectorOutput {
                             info!("Start write bytes with payload");
                             v.push_str("\r\n");
                             info!("Prepare send payload val {:?}", &v);
-                            let _ = s.write(v.as_bytes());
+                            let _ = shared_stream.borrow_mut().write(v.as_bytes());
                             info!("Start read bytes after write payload");
-                            let read_bytes: Result<usize, Error> = s.read(&mut [0; 128]);
+                            let read_bytes: Result<usize, Error> = shared_stream.borrow_mut().read(&mut [0; 128]);
                             match read_bytes {
                                 Ok(v) => {
                                     match v {
@@ -147,12 +156,6 @@ impl Output for PamCollectorOutput {
                             ()
                         }
                     }
-                }
-                Err(_) => {
-                    error!("Error create underlayng socket");
-                    need_recreate = true;
-                }
-            };
         }
     }
 }
