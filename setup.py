@@ -1,7 +1,6 @@
 import os
 import sys
 
-import pip
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
@@ -17,7 +16,8 @@ def read(*parts):
 try:
     from setuptools_rust import Binding, RustExtension
 except ImportError:
-    status = pip.main(['install', 'setuptools-rust'])
+    from pip._internal import main
+    status = main(['install', 'setuptools-rust'])
     if status != 0:
         print("Please install setuptools-rust package")
         raise SystemExit(status)
