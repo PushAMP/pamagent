@@ -52,6 +52,7 @@ impl PamCollectorOutput {
 }
 
 fn new_io_err<E: Display>(err: E) -> io::Error {
+    warn!("{}", err.to_string());
     io::Error::new(io::ErrorKind::Other, err.to_string())
 }
 
@@ -122,16 +123,16 @@ impl Output for PamCollectorOutput {
                 shared_stream.replace(new_stream);
                 need_recreate = false;
             }
-
-
-                    info!("Get OUTPUT_QUEUE");
+                    debug!("Get OUTPUT_QUEUE");
                     let val: Option<String> = OUTPUT_QUEUE.lock().unwrap().pop_front();
                     match val {
                         Some(mut v) => {
-                            info!("Start write bytes with payload");
+                            debug!("Start write bytes with payload");
                             v.push_str("\r\n");
-                            info!("Prepare send payload val {:?}", &v);
-                            let _ = shared_stream.borrow_mut().write(v.as_bytes());
+                            debug!("Prepare send payload");
+                            debug!("Payload size is {}", v.len());
+                            trace!("Value is {:?}", &v);
+                            let _ = shared_stream.borrow_mut().write_all(v.as_bytes());
                             info!("Start read bytes after write payload");
                             let read_bytes: Result<usize, Error> = shared_stream.borrow_mut().read(&mut [0; 128]);
                             match read_bytes {
@@ -151,7 +152,7 @@ impl Output for PamCollectorOutput {
                             }
                         }
                         None => {
-                            info!("Not val");
+                            trace!("Not val");
                             thread::sleep(Duration::from_millis(400));
                             ()
                         }
