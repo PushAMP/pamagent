@@ -1,0 +1,568 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Welcome to pamagent’s documentation! &mdash; pamagent 0.1.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> pamagent
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">Welcome to pamagent’s documentation!</a><ul>
+<li><a class="reference internal" href="#module-pamagent.pamagent_core">PamagentCore</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">pamagent</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>Welcome to pamagent’s documentation!</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="welcome-to-pamagent-s-documentation">
+<h1>Welcome to pamagent’s documentation!<a class="headerlink" href="#welcome-to-pamagent-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-pamagent"></span><span class="target" id="module-pamagent.transaction_cache"></span><dl class="function">
+<dt id="pamagent.transaction_cache.current_thread_id">
+<code class="descclassname">pamagent.transaction_cache.</code><code class="descname">current_thread_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pamagent/transaction_cache.html#current_thread_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pamagent.transaction_cache.current_thread_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the thread ID for the caller.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.transaction_cache.current_transaction">
+<code class="descclassname">pamagent.transaction_cache.</code><code class="descname">current_transaction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pamagent/transaction_cache.html#current_transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pamagent.transaction_cache.current_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the transaction object if one exists for the currently executing thread.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.transaction_cache.drop_transaction">
+<code class="descclassname">pamagent.transaction_cache.</code><code class="descname">drop_transaction</code><span class="sig-paren">(</span><em>transaction</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pamagent/transaction_cache.html#drop_transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pamagent.transaction_cache.drop_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drops the specified transaction, validating that it is actually saved away under the current executing thread.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.transaction_cache.save_transaction">
+<code class="descclassname">pamagent.transaction_cache.</code><code class="descname">save_transaction</code><span class="sig-paren">(</span><em>transaction</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pamagent/transaction_cache.html#save_transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pamagent.transaction_cache.save_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the specified transaction away under the thread ID of the current executing thread.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.transaction_cache.set_transaction_path">
+<code class="descclassname">pamagent.transaction_cache.</code><code class="descname">set_transaction_path</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pamagent/transaction_cache.html#set_transaction_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pamagent.transaction_cache.set_transaction_path" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> – path of request URI</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="section" id="module-pamagent.pamagent_core">
+<span id="pamagentcore"></span><h2>PamagentCore<a class="headerlink" href="#module-pamagent.pamagent_core" title="Permalink to this headline">¶</a></h2>
+<p>This module is implemented in Rust.</p>
+<p>This module has the ability to configure the logging level
+To configure the logging, it is necessary to set the variable environment PAMAGENT_LEVEL_LOG
+with a value from 0 to 3 before the application starts, if the environment variable is not set
+to the default value of 0 (see pamcore/src/logging.rs for more information)</p>
+<dl class="function">
+<dt id="pamagent.pamagent_core.activate">
+<code class="descclassname">pamagent.pamagent_core.</code><code class="descname">activate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pamagent.pamagent_core.activate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Activate output transport to PAMCollector</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>token</strong> (<em>str</em>) – Secret token for auth on PAMCollector.</li>
+<li><strong>addr</strong> (<em>str</em>) – Address with format host:port for connect to PAMCollector instance .</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the return code.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.pamagent_core.drop_transaction">
+<code class="descclassname">pamagent.pamagent_core.</code><code class="descname">drop_transaction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pamagent.pamagent_core.drop_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop transaction from transaction cache</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<em>int</em>) – Transaction ID. ThreadID as usual.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the return code.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.pamagent_core.dump_transaction">
+<code class="descclassname">pamagent.pamagent_core.</code><code class="descname">dump_transaction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pamagent.pamagent_core.dump_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump transaction into JSON string</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<em>int</em>) – Transaction ID. ThreadID as usual.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The JSON string . If Transaction not found return empty string</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.pamagent_core.get_transaction">
+<code class="descclassname">pamagent.pamagent_core.</code><code class="descname">get_transaction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pamagent.pamagent_core.get_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get transaction by id</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<em>int</em>) – Transaction ID. ThreadID as usual.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Return transaction_id or None if Transaction not availability.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int or None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.pamagent_core.get_transaction_end_time">
+<code class="descclassname">pamagent.pamagent_core.</code><code class="descname">get_transaction_end_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pamagent.pamagent_core.get_transaction_end_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get transaction end time</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<em>int</em>) – Transaction ID. ThreadID as usual.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Return timestamp when Transaction ended. If Transaction not found or Transaction
+has empty stack (transaction not activate) return 0.0</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.pamagent_core.get_transaction_start_time">
+<code class="descclassname">pamagent.pamagent_core.</code><code class="descname">get_transaction_start_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pamagent.pamagent_core.get_transaction_start_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get transaction start time</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<em>int</em>) – Transaction ID. ThreadID as usual.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Return timestamp when Transaction started. If Transaction not found or Transaction
+has empty stack (transaction not activate) return 0.0</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.pamagent_core.pop_current">
+<code class="descclassname">pamagent.pamagent_core.</code><code class="descname">pop_current</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pamagent.pamagent_core.pop_current" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pop TraceNode from TraceStack. Call when TransactionNode is closed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>id</strong> (<em>int</em>) – Transaction ID. ThreadID as usual.</li>
+<li><strong>node_id</strong> (<em>int</em>) – ID of TransactionNode. Object.__id__ as usual.</li>
+<li><strong>end_time</strong> (<em>float</em>) – Timestamp when TransactionNode is closed.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Return ID of Parent TransactionNode. If current TransactionNode not found return None</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int or None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.pamagent_core.push_current">
+<code class="descclassname">pamagent.pamagent_core.</code><code class="descname">push_current</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pamagent.pamagent_core.push_current" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push trace node to current transaction</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>id</strong> (<em>int</em>) – Transaction ID. ThreadID as usual.</li>
+<li><strong>node_id</strong> (<em>int</em>) – ID of TransactionNode. Object.__id__ as usual.</li>
+<li><strong>start_time</strong> (<em>float</em>) – Timestamp when TransactionNode is activated</li>
+<li><strong>func_name</strong> (<em>str</em><em> or </em><em>None</em>) – Function name if exists</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the return code.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.pamagent_core.push_current_cache">
+<code class="descclassname">pamagent.pamagent_core.</code><code class="descname">push_current_cache</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pamagent.pamagent_core.push_current_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push cache trace node to current transaction</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>id</strong> (<em>int</em>) – Transaction ID. ThreadID as usual.</li>
+<li><strong>node_id</strong> (<em>int</em>) – ID of TransactionNode. Object.__id__ as usual.</li>
+<li><strong>start_time</strong> (<em>float</em>) – Timestamp when TransactionNode is activated</li>
+<li><strong>database_product</strong> (<em>str</em>) – Name of database product</li>
+<li><strong>database_name</strong> (<em>str</em>) – Name of database name.</li>
+<li><strong>host</strong> (<em>str</em>) – Host of cache instanse</li>
+<li><strong>port</strong> (<em>int</em>) – Port of cache instanse</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.pamagent_core.push_current_database">
+<code class="descclassname">pamagent.pamagent_core.</code><code class="descname">push_current_database</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pamagent.pamagent_core.push_current_database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push database trace node to current transaction</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>id</strong> (<em>int</em>) – Transaction ID. ThreadID as usual.</li>
+<li><strong>node_id</strong> (<em>int</em>) – ID of TransactionNode. Object.__id__ as usual.</li>
+<li><strong>start_time</strong> (<em>float</em>) – Timestamp when TransactionNode is activated</li>
+<li><strong>database_product</strong> (<em>str</em>) – Name of database product</li>
+<li><strong>database_name</strong> (<em>str</em>) – Name of database name or database file path</li>
+<li><strong>host</strong> (<em>str</em>) – Host of database instanse</li>
+<li><strong>port</strong> (<em>int</em>) – Port of database instanse</li>
+<li><strong>operation</strong> (<em>str</em>) – SQL Operation</li>
+<li><strong>target</strong> (<em>str</em>) – Target table/view</li>
+<li><strong>sql</strong> (<em>str</em>) – Obfuscated sql</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.pamagent_core.push_current_external">
+<code class="descclassname">pamagent.pamagent_core.</code><code class="descname">push_current_external</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pamagent.pamagent_core.push_current_external" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push external trace node to current transaction</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>id</strong> (<em>int</em>) – Transaction ID. ThreadID as usual.</li>
+<li><strong>node_id</strong> (<em>int</em>) – ID of TransactionNode. Object.__id__ as usual.</li>
+<li><strong>start_time</strong> (<em>float</em>) – Timestamp when TransactionNode is activated</li>
+<li><strong>url</strong> (<em>str</em>) – Full URL that was used to request an external service.</li>
+<li><strong>library</strong> (<em>str</em>) – Name of library</li>
+<li><strong>method</strong> (<em>str</em>) – Method that was used to request an external service</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the return code.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.pamagent_core.set_transaction">
+<code class="descclassname">pamagent.pamagent_core.</code><code class="descname">set_transaction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pamagent.pamagent_core.set_transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set transaction</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>id</strong> (<em>int</em>) – Transaction ID. ThreadID as usual.</li>
+<li><strong>transaction</strong> (<em>str</em>) – Transaction name.</li>
+<li><strong>path</strong> (<em>str</em>) – Path of transaction. URI without qs as usual.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the return code.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pamagent.pamagent_core.set_transaction_path">
+<code class="descclassname">pamagent.pamagent_core.</code><code class="descname">set_transaction_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pamagent.pamagent_core.set_transaction_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set transaction path</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>id</strong> (<em>int</em>) – Transaction ID. ThreadID as usual.</li>
+<li><strong>path</strong> (<em>str</em>) – Path for Transaction. URI or handler name as usual.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the return code.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Dmitry Zhiltsov.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1.3',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
