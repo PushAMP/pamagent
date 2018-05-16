@@ -38,7 +38,7 @@ for PYBIN in /opt/python/cp{35,36}*/bin/; do
     "${PYBIN}/pip" install pamagent --no-index -f /io/wheelhouse/
 done
 
-chown -Rv +0:+&TARGET_GID /io/dist
+chown -Rv +0:+${TARGET_GID} /io/dist
 chmod -Rv 777 /io/dist
-chown -Rv +0:+&TARGET_GID /io/wheelhouse
+chown -Rv +0:+${TARGET_GID} /io/wheelhouse
 chmod -Rv 777 /io/wheelhouse
