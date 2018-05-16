@@ -15,8 +15,8 @@ use native_tls::{TlsConnector, TlsStream};
 use std::io::{Read, Write};
 
 lazy_static! {
-    pub static ref OUTPUT_QUEUE: Arc<Mutex<VecDeque<String>>> = {
-        let vector: VecDeque<String> = VecDeque::new();
+    pub static ref OUTPUT_QUEUE: Arc<Mutex<VecDeque<Vec<u8>>>> = {
+        let vector: VecDeque<Vec<u8>> = VecDeque::new();
         Arc::new(Mutex::new(vector))
     };
 }
@@ -124,15 +124,15 @@ impl Output for PamCollectorOutput {
                 need_recreate = false;
             }
                     debug!("Get OUTPUT_QUEUE");
-                    let val: Option<String> = OUTPUT_QUEUE.lock().unwrap().pop_front();
+                    let val: Option<Vec<u8>> = OUTPUT_QUEUE.lock().unwrap().pop_front();
                     match val {
                         Some(mut v) => {
                             debug!("Start write bytes with payload");
-                            v.push_str("\r\n");
+                            v.append(&mut "\r\n".as_bytes().to_vec());
                             debug!("Prepare send payload");
                             debug!("Payload size is {}", v.len());
                             trace!("Value is {:?}", &v);
-                            let _ = shared_stream.borrow_mut().write_all(v.as_bytes());
+                            let _ = shared_stream.borrow_mut().write_all(&v);
                             info!("Start read bytes after write payload");
                             let read_bytes: Result<usize, Error> = shared_stream.borrow_mut().read(&mut [0; 128]);
                             match read_bytes {

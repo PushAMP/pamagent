@@ -23,8 +23,8 @@ backoff = "0.1.2"
 log = "0.4"
 fern = "0.5"
 chrono = "0.4"
+rmp-serde = "0.13.7"
 
 [dependencies.pyo3]
-git = "https://github.com/PyO3/pyo3"
-#version = "0.2.5"
+version = "0.2.6"
 features = ["extension-module"]

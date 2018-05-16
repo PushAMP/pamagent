@@ -1,5 +1,18 @@
 #!/bin/bash
 set -e -x
+TARGET_GID=$(stat -c "%g" /io)
+EXISTS=$(cat /etc/group | grep $TARGET_GID | wc -l)
+
+# Create new group using target GID and add nobody user
+if [ $EXISTS == "0" ]; then
+    groupadd -g $TARGET_GID teamcity
+    usermod -a -G teamcity nobody
+else
+    # GID exists, find group name and add
+    GROUP=$(getent group $TARGET_GID | cut -d: -f1)
+    usermod -a -G $GROUP nobody
+fi
+
 
 # Compile wheels
 for PYBIN in /opt/python/cp{35,36}*/bin; do
@@ -25,5 +38,7 @@ for PYBIN in /opt/python/cp{35,36}*/bin/; do
     "${PYBIN}/pip" install pamagent --no-index -f /io/wheelhouse/
 done
 
+chown -Rv +0:+&TARGET_GID /io/dist
 chmod -Rv 777 /io/dist
+chown -Rv +0:+&TARGET_GID /io/wheelhouse
 chmod -Rv 777 /io/wheelhouse

@@ -3,8 +3,10 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use rand;
 use serde_json;
+use serde::Serialize;
 use output;
 const DEFAULT_TIME_VAL: f64 = 0.0;
+use rmps::Serializer;
 
 lazy_static! {
     pub static ref TRANSACTION_CACHE: RwLock<TrMap> = { RwLock::new(TrMap::new()) };
@@ -489,8 +491,11 @@ impl<'b> TransactionCache for TrMap {
     fn drop_transaction(&mut self, id: u64) -> bool {
         match self.0.remove(&id) {
             Some(val) => {
-                let j: String = serde_json::to_string(&val).unwrap_or_else(|_| "".to_uppercase());
-                output::OUTPUT_QUEUE.lock().unwrap().push_back(j);
+                let mut buf = Vec::new();
+                &val.serialize(&mut Serializer::new(&mut buf)).unwrap();
+//                let j = let mut buf = Vec::new();
+//                let j: String = serde_json::to_string(&val).unwrap_or_else(|_| "".to_uppercase());
+                output::OUTPUT_QUEUE.lock().unwrap().push_back(buf);
                 true
             }
             None => false,

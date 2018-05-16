@@ -12,11 +12,13 @@ extern crate lazy_static;
 #[macro_use]
 extern crate log;
 extern crate rand;
+extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
 extern crate url;
 extern crate native_tls;
+extern crate rmp_serde as rmps;
 
 use std::thread;
 
